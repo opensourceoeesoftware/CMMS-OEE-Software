@@ -1,0 +1,44 @@
+
+
+services:
+  portfolio_db:
+    image: postgres:latest
+    volumes:
+      - portforlio_data:/var/lib/postgresql/data/
+    env_file: "backend/.env"
+    ports:
+      - '5432:5432'
+  portfolio_redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    depends_on:
+      - portfolio_db
+  portfolio_web:
+    build: backend
+    command: gunicorn backend.asgi:application --bind 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker
+    volumes:
+      - ./backend:/backend/
+    env_file: "backend/.env"
+    expose:
+      - 8000
+    depends_on:
+      - portfolio_db
+      - portfolio_redis
+  portfolio_nginx:
+    build: nginx
+    
+    volumes:
+      - ./backend/staticapi:/backend/staticapi/
+      - ./backend/media:/backend/media/
+      - ./frontend/build:/usr/share/nginx/html
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - portfolio_web
+volumes:
+  portforlio_data:
+  staticfiles:

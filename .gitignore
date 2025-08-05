@@ -1,0 +1,6 @@
+__pycache__
+/backend/media
+/backend/staticapi
+*.sqlite3
+*.env
+**/migrations

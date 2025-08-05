@@ -1,0 +1,50 @@
+name: docker-compose-actions-workflow
+on: 
+  push:
+    branches: [main]
+    pull_requests: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Docker using Docker's official script
+        run: |
+          curl -fsSL https://get.docker.com -o get-docker.sh
+          sudo sh get-docker.sh
+        continue-on-error: false
+      - name: Install Docker Compose
+        run: |
+            sudo curl -L "https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+            docker-compose --version
+        continue-on-error: false
+      - name: 'Create env file'
+        run: |
+          touch backend/.env
+          echo POSTGRES_DB=database_portfolio >> backend/.env
+          echo POSTGRES_USER=postgres >> backend/.env
+          echo SECRET_KEY=django-insecure >> backend/.env
+          echo DEBUG=True >> backend/.env
+
+          echo EMAIL_HOST=mail.mail.com >> backend/.env
+          echo EMAIL_HOST_USER=email@emqil.io >> backend/.env
+          echo EMAIL_HOST_PASSWORD=Password >> backend/.env
+
+          echo DB_HOST=portfolio_db >> backend/.env
+          echo DB_USER=postgres >> backend/.env
+          echo DB_NAME=database_portfolio >> backend/.env
+          echo DB_PASSWORD=password >> backend/.env
+          cat backend/.env
+      - name: Build the stack
+        run: docker-compose up -d --build
+        
+      - name: create migrations
+        run: docker-compose exec portfolio_web python manage.py makemigrations db state
+        
+      - name: Migrate database
+        run: docker-compose exec portfolio_web python manage.py migrate
+        
+      - name: Run Testss
+        run: docker-compose exec portfolio_web python3 manage.py test
+        
