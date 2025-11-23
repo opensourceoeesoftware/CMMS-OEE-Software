@@ -1,6 +1,4 @@
-import React, { Component } from 'react';
-import Nav from '../../../Layout/Nav/Nav';
-import Sidebar from '../../../Layout/Sidebar/Sidebar';
+import  { Component } from 'react';
 import AuthContext from '../../../AuthProvider/AuthContext';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Typography from '@mui/material/Typography';
@@ -131,8 +129,7 @@ class AssetsTable extends Component {
         ];
         return (
             <>
-                <Nav></Nav>
-                <Sidebar />
+
                 {this.state.delete_form && 
                 <AssetsDelete handleClose={this.onclose} 
                 HandleConfirm={this.onDeleteAssets} 

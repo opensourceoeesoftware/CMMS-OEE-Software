@@ -3,14 +3,15 @@ import { Route, Routes } from 'react-router-dom';
 import AssetsDashboard from './AssetsDashboard/AssetsDashboard';
 import MaintenanceDashboard from './MaintenanceDashboard/MaintenanceDashboard';
 import Agenda from './Agenda/Agenda';
-import Live from './Live/Live';
-import Energy from './Energy/Energy';
-import Oee from './Oee/Oee';
-import Downtimes from './Downtimes/Downtimes';
+
+import AppLayout from "../../Layout/AppLayout";
 class Dashboards extends Component {
     render() {
         return (
-            <>
+            <AppLayout>
+
+            
+           
             <Routes>
                     <Route path="/assets" Component={AssetsDashboard} /> 
                     <Route path="/maintenances" Component={MaintenanceDashboard} /> 
@@ -19,7 +20,8 @@ class Dashboards extends Component {
 
                 </Routes>
                 
-            </>
+            
+            </AppLayout>
         );
     }
 }

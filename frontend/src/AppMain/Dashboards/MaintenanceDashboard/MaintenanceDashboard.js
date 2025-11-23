@@ -83,8 +83,7 @@ class MaintenanceDashboard extends Component {
                     <CircularProgress />
 
                 </Backdrop>
-                <Nav></Nav>
-                <Sidebar/>
+             
                 <div className='content-wrapper'>
                 <div className='content-header'>
                         <Stack spacing={2} justifyContent={'space-between'} direction="row" sx={{mb:2,p:1}}>

@@ -1,214 +1,202 @@
 import * as React from 'react';
-import { url as url_base} from '../../../Config';
+import { url as url_base } from '../../../Config';
+
 import {
-    Button,
-    Dialog,
-    AppBar,
-    Toolbar,
-    IconButton,
-    Typography,
-    Slide
+  Drawer,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Button,
+  Box,
+  Grid,
+  Paper,
+  Divider,
+  TextField,
+  MenuItem,
+  Backdrop,
+  CircularProgress,
 } from '@mui/material';
+
 import CloseIcon from '@mui/icons-material/Close';
-import {  toast } from 'react-toastify';
-import AuthContext from '../../../AuthProvider/AuthContext';
-import { FormControl, FormHelperText, Input, InputLabel } from '@mui/material';
-import {  Grid } from '@mui/material';
-import { Backdrop, CircularProgress, MenuItem,  Select } from '@mui/material';
-import Accordion from '@mui/material/Accordion';
-
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import axios from 'axios';
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
-});
-function formatDateForInput(date) {
-    const d = new Date(date);
-    const pad = (n) => n < 10 ? '0' + n : n;
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
-}
+import { toast } from 'react-toastify';
+import AuthContext from '../../../AuthProvider/AuthContext';
 
 class CellEditForm extends React.Component {
-    constructor(props) {
-        super(props);
-        const { cell } = props; // Receive the cell object from props
-        this.state = {
-            is_loading: false,
-            name: cell?.name || '',
-            machine: cell?.machine?.uuid || '',
-            
-            menu_open: true
-        };
-        this.isBadForm = this.isBadForm.bind(this);
-        this.handleRegister = this.handleRegister.bind(this);
-        this.handleClose = this.handleClose.bind(this);
+  constructor(props) {
+    super(props);
+
+    const { cell } = props;
+
+    this.state = {
+      is_loading: false,
+      name: cell?.name || '',
+      machine: cell?.machine?.uuid || '',
+    };
+
+    this.handleRegister = this.handleRegister.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.cell !== this.props.cell) {
+      const cell = this.props.cell;
+      this.setState({
+        name: cell?.name || '',
+        machine: cell?.machine?.uuid || '',
+      });
     }
+  }
 
+  handleChange(e) {
+    const { name, value } = e.target;
+    this.setState({ [name]: value });
+  }
 
-    handleChange = (e) => {
-        const { name, value } = e.target;
-        this.setState({ [name]: value });
-    };
- 
-    handleChangeAssigned = (e) => {
-        const { name, value } = e.target;
-        
-        this.setState({ [name]: value });
-    };
-
-  
-    handleClose() {
-        this.setState({ ...this.state, menu_open: false });
+  isBadForm() {
+    const { name, machine } = this.state;
+    if (!name || !machine) {
+      toast.error("Please fill in all required fields");
+      return true;
     }
-    handleRegister = async () => {
-        if (this.isBadForm()) return;
-        this.setState({ ...this.state,is_loading: true },async ()=>{
+    return false;
+  }
 
-            
-            const formData = new FormData();
-            Object.keys(this.state).forEach(key => {
-                if (this.state[key])
-                    formData.append(key, this.state[key]);
-            });
-           
-            try {
-                const { cell } = this.props; // Get the cell object from props
-                const method = cell ? 'patch' : 'post';
-                const url = url_base + '/api/v2/cells/' + (cell ? `${cell.uuid}/` : '');
-    
-                const response = await axios({
-                    method: method,
-                    url: url,
-                    data: formData,
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        'Authorization': "Token " + this.context.state.token
-                    }
-                });
-    
-                toast.success(`Cell ${cell ? 'updated' : 'created'}`);
-                
-                    if(this.props.OnUpdate)
-                    this.props.OnUpdate();
-               
-            } catch (error) {
-                
-                toast.error("Something went wrong! Please try again. Hint: " + error?.response?.data['detail']);
-            } finally {
-                this.setState({ is_loading: false });
-                if(this.props.OnUpdate)
-                    this.props.OnUpdate();
-            }
-        });
-    };
-    isBadForm() {
-        const { name, machine } = this.state;
-        if (!name    || !machine  ) {
-            toast.error("Please fill in all required fields");
-            return true;
+  async handleRegister() {
+    if (this.isBadForm()) return;
+
+    this.setState({ is_loading: true });
+
+    try {
+      const { cell } = this.props;
+      const method = cell ? 'patch' : 'post';
+      const url = url_base + '/api/v2/cells/' + (cell ? `${cell.uuid}/` : '');
+
+      const formData = new FormData();
+      formData.append("name", this.state.name);
+      formData.append("machine", this.state.machine);
+
+      await axios({
+        method,
+        url,
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': "Token " + this.context.state.token,
         }
-        return false;
+      });
+
+      toast.success(`Cell ${cell ? 'updated' : 'created'}`);
+
+      if (this.props.OnUpdate) {
+        this.props.OnUpdate();
+      }
+    } catch (error) {
+      toast.error("Something went wrong! " + (error?.response?.data?.detail || ""));
+    } finally {
+      this.setState({ is_loading: false });
     }
-    render() {
-        const { cell, users, assets } = this.props;
-    
-        
-        return (
-            <>
-                <Dialog
-                    fullScreen
-                    open={this.props.show}
-                    onClose={this.props.handleClose}
-                    TransitionComponent={Transition}
+  }
+
+  render() {
+    const { cell, assets } = this.props;
+
+    return (
+      <Drawer
+        anchor="right"
+        open={this.props.show}
+        onClose={this.props.handleClose}
+       PaperProps={{
+    sx: {
+      width: "50vw",       // main width
+      minWidth: 420,        // consistent min width
+      maxWidth: 720,        // consistent max width
+      display: "flex",
+      flexDirection: "column",
+      bgcolor: "background.default",
+    }
+  }}
+        ModalProps={{ keepMounted: true }}
+      >
+        {/* Loading Backdrop */}
+        <Backdrop
+          sx={{ zIndex: (theme) => theme.zIndex.drawer + 3 }}
+          open={this.state.is_loading}
+        >
+          <CircularProgress />
+        </Backdrop>
+
+        {/* Header */}
+        <AppBar
+          elevation={0}
+          color="default"
+          sx={{
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            position: "sticky",
+            top: 0,
+            zIndex: 2,
+          }}
+        >
+          <Toolbar>
+            <IconButton onClick={this.props.handleClose}>
+              <CloseIcon />
+            </IconButton>
+
+            <Typography sx={{ flex: 1 }} variant="h6">
+              {cell ? "Edit Cell" : "New Cell"}
+            </Typography>
+
+            <Button variant="contained" onClick={this.handleRegister}>
+              {cell ? "Save" : "Create"}
+            </Button>
+          </Toolbar>
+        </AppBar>
+
+        {/* Content */}
+        <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
+
+          {/* Basic Info Section */}
+          <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
+            <Typography variant="h6" fontWeight={600}>Basic Information</Typography>
+            <Divider sx={{ my: 2 }} />
+
+            <Grid container spacing={2}>
+              {/* Name */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Cell Name"
+                  name="name"
+                  value={this.state.name}
+                  onChange={this.handleChange}
+                />
+              </Grid>
+
+              {/* Assigned Machine */}
+              <Grid item xs={12}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Assigned Machine"
+                  name="machine"
+                  value={this.state.machine}
+                  onChange={this.handleChange}
                 >
-                    <Backdrop
-                        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 10 }}
-                        open={this.state.is_loading}
-                    >
-                        <CircularProgress />
-                    </Backdrop>
-                    <AppBar sx={{ position: 'relative' }}>
-                        <Toolbar>
-                            <IconButton
-                                edge="start"
-                                color="inherit"
-                                onClick={this.props.handleClose}
-                                aria-label="close"
-                            >
-                                <CloseIcon />
-                            </IconButton>
-                            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-                                {cell ? "Edit " : "Add "} Cells
-                            </Typography>
-                            <Button autoFocus color="inherit" onClick={this.handleRegister}>
-                                {cell ? "Edit " : "Create "}
-                            </Button>
-                        </Toolbar>
-                    </AppBar>
-                    <Grid container spacing={2} sx={{ p: 5 }}>
-                        <Accordion defaultExpanded sx={{width:"100%"}}>
-                            <AccordionSummary
-                                expandIcon={<ExpandMoreIcon />}
-                                aria-controls="panel1-content"
-                                id="panel1-header"
-                            >
-                                Basic Info
-                            </AccordionSummary>
-                            <AccordionDetails>
-                         
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="name"
-                                        placeholder='Name'
-                                        name='name'
-                                        type='text'
-                                        aria-describedby='name-text'
-                                        onChange={this.handleChange}
-                                        value={this.state.name}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="name-text">
-                                        <strong>Required *</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="name-text">
-                                        Enter a name for the cell
-                                    </FormHelperText>
-                                </FormControl>
-
-                               
-
-                            
-
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <InputLabel id="asset-label">Asset</InputLabel>
-                                    <Select
-                                        labelId="asset-label"
-                                        id="machine"
-                                        name='machine'
-                                        value={this.state.machine}
-                                        onChange={this.handleChange}
-                                        autoComplete='off'
-                                    >
-                                        {assets.map(asset => (
-                                            <MenuItem key={asset.uuid} value={asset.uuid}>{asset.name}</MenuItem>
-                                        ))}
-                                    </Select>
-                                    <FormHelperText id="asset-text">
-                                        Select the asset for this cell
-                                    </FormHelperText>
-                                </FormControl>
-                            </AccordionDetails>
-                        </Accordion>
-
-                    </Grid>
-
-                </Dialog>
-            </>
-        );
-    }
+                  {assets.map(asset => (
+                    <MenuItem key={asset.uuid} value={asset.uuid}>
+                      {asset.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            </Grid>
+          </Paper>
+        </Box>
+      </Drawer>
+    );
+  }
 }
 
 CellEditForm.contextType = AuthContext;

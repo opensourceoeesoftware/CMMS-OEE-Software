@@ -1,6 +1,4 @@
-import React, { Component } from 'react';
-import Nav from '../../../Layout/Nav/Nav';
-import Sidebar from '../../../Layout/Sidebar/Sidebar';
+import { Component } from 'react';
 import AuthContext from '../../../AuthProvider/AuthContext';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Typography from '@mui/material/Typography';
@@ -69,7 +67,7 @@ class AssetsTable extends Component {
             try {
                 this.state.assets_to_delete.forEach(async (element) => {
                     try {
-                        const response = await axios.delete(url + '/api/v1/maintenances-plans/'+ element + '/', {
+                       await axios.delete(url + '/api/v1/maintenances-plans/'+ element + '/', {
                           headers: {
                             'Authorization': "Token " + this.context.state.token
                           }
@@ -145,8 +143,7 @@ class AssetsTable extends Component {
         ];
         return (
             <>
-                <Nav></Nav>
-                <Sidebar />
+
                 {this.state.delete_form && 
                 <AssetsDelete handleClose={this.onclose} 
                 HandleConfirm={this.onDeleteAssets} 

@@ -1,215 +1,202 @@
 import * as React from 'react';
-import { url as url_base} from '../../../Config';
+import { url as url_base } from '../../../Config';
+
 import {
-    Button,
-    Dialog,
-  
-    AppBar,
-    Toolbar,
-    IconButton,
-    Typography,
-    Slide
+  Drawer,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Button,
+  Box,
+  Grid,
+  Paper,
+  Divider,
+  TextField,
+  MenuItem,
+  Backdrop,
+  CircularProgress,
 } from '@mui/material';
+
 import CloseIcon from '@mui/icons-material/Close';
+import axios from 'axios';
 import { toast } from 'react-toastify';
 import AuthContext from '../../../AuthProvider/AuthContext';
-import { FormControl, FormHelperText, Input, InputLabel } from '@mui/material';
-import {Grid } from '@mui/material';
-import { Backdrop, CircularProgress, MenuItem,  Select } from '@mui/material';
-import Accordion from '@mui/material/Accordion';
-
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import axios from 'axios';
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
-});
-function formatDateForInput(date) {
-    const d = new Date(date);
-    const pad = (n) => n < 10 ? '0' + n : n;
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
-}
 
 class FaultEditForm extends React.Component {
-    constructor(props) {
-        super(props);
-        const { fault } = props; // Receive the fault object from props
-        this.state = {
-            is_loading: false,
-            name: fault?.name || '',
-            machine: fault?.machine?.uuid || '',
-            
-            menu_open: true
-        };
-        this.isBadForm = this.isBadForm.bind(this);
-        this.handleRegister = this.handleRegister.bind(this);
-        this.handleClose = this.handleClose.bind(this);
+  constructor(props) {
+    super(props);
+
+    const { fault } = props;
+
+    this.state = {
+      is_loading: false,
+      name: fault?.name || '',
+      machine: fault?.machine?.uuid || '',
+    };
+
+    this.handleRegister = this.handleRegister.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.fault !== this.props.fault) {
+      const fault = this.props.fault;
+      this.setState({
+        name: fault?.name || '',
+        machine: fault?.machine?.uuid || '',
+      });
     }
+  }
 
+  handleChange(e) {
+    const { name, value } = e.target;
+    this.setState({ [name]: value });
+  }
 
-    handleChange = (e) => {
-        const { name, value } = e.target;
-        this.setState({ [name]: value });
-    };
- 
-    handleChangeAssigned = (e) => {
-        const { name, value } = e.target;
-        
-        this.setState({ [name]: value });
-    };
-
-  
-    handleClose() {
-        this.setState({ ...this.state, menu_open: false });
+  isBadForm() {
+    const { name, machine } = this.state;
+    if (!name || !machine) {
+      toast.error("Please fill in all required fields");
+      return true;
     }
-    handleRegister = async () => {
-        if (this.isBadForm()) return;
-        this.setState({ ...this.state,is_loading: true },async ()=>{
+    return false;
+  }
 
-            
-            const formData = new FormData();
-            Object.keys(this.state).forEach(key => {
-                if (this.state[key])
-                    formData.append(key, this.state[key]);
-            });
-           
-            try {
-                const { fault } = this.props; // Get the fault object from props
-                const method = fault ? 'patch' : 'post';
-                const url = url_base + '/api/v2/faults/' + (fault ? `${fault.uuid}/` : '');
-    
-                const response = await axios({
-                    method: method,
-                    url: url,
-                    data: formData,
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        'Authorization': "Token " + this.context.state.token
-                    }
-                });
-    
-                toast.success(`fault ${fault ? 'updated' : 'created'}`);
-                
-                    if(this.props.OnUpdate)
-                    this.props.OnUpdate();
-               
-            } catch (error) {
-                
-                toast.error("Something went wrong! Please try again. Hint: " + error?.response?.data['detail']);
-            } finally {
-                this.setState({ is_loading: false });
-                if(this.props.OnUpdate)
-                    this.props.OnUpdate();
-            }
-        });
-    };
-    isBadForm() {
-        const { name, machine } = this.state;
-        if (!name    || !machine  ) {
-            toast.error("Please fill in all required fields");
-            return true;
+  async handleRegister() {
+    if (this.isBadForm()) return;
+
+    this.setState({ is_loading: true });
+
+    try {
+      const { fault } = this.props;
+      const method = fault ? 'patch' : 'post';
+      const url = url_base + '/api/v2/faults/' + (fault ? `${fault.uuid}/` : '');
+
+      const formData = new FormData();
+      formData.append("name", this.state.name);
+      formData.append("machine", this.state.machine);
+
+      await axios({
+        method,
+        url,
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': "Token " + this.context.state.token,
         }
-        return false;
+      });
+
+      toast.success(`Fault ${fault ? 'updated' : 'created'}`);
+
+      if (this.props.OnUpdate) this.props.OnUpdate();
+    } catch (error) {
+      toast.error("Something went wrong! " + (error?.response?.data?.detail || ""));
+    } finally {
+      this.setState({ is_loading: false });
     }
-    render() {
-        const { fault, users, assets } = this.props;
-    
-        
-        return (
-            <>
-                <Dialog
-                    fullScreen
-                    open={this.props.show}
-                    onClose={this.props.handleClose}
-                    TransitionComponent={Transition}
+  }
+
+  render() {
+    const { fault, assets } = this.props;
+
+    return (
+      <Drawer
+        anchor="right"
+        open={this.props.show}
+        onClose={this.props.handleClose}
+        PaperProps={{
+          sx: {
+            width: "50vw",
+            minWidth: 420,
+            maxWidth: 720,
+            display: "flex",
+            flexDirection: "column",
+            bgcolor: "background.default",
+          }
+        }}
+        ModalProps={{ keepMounted: true }}
+      >
+        {/* Loading Backdrop */}
+        <Backdrop
+          sx={{ zIndex: (theme) => theme.zIndex.drawer + 3 }}
+          open={this.state.is_loading}
+        >
+          <CircularProgress />
+        </Backdrop>
+
+        {/* Header */}
+        <AppBar
+          elevation={0}
+          color="default"
+          sx={{
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            position: "sticky",
+            top: 0,
+            zIndex: 2,
+          }}
+        >
+          <Toolbar>
+            <IconButton onClick={this.props.handleClose}>
+              <CloseIcon />
+            </IconButton>
+
+            <Typography sx={{ flex: 1 }} variant="h6">
+              {fault ? "Edit Fault" : "New Fault"}
+            </Typography>
+
+            <Button variant="contained" onClick={this.handleRegister}>
+              {fault ? "Save" : "Create"}
+            </Button>
+          </Toolbar>
+        </AppBar>
+
+        {/* Content */}
+        <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
+
+          {/* BASIC INFO SECTION */}
+          <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
+            <Typography variant="h6" fontWeight={600}>Basic Information</Typography>
+            <Divider sx={{ my: 2 }} />
+
+            <Grid container spacing={2}>
+              {/* Fault Name */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Fault Name"
+                  name="name"
+                  value={this.state.name}
+                  onChange={this.handleChange}
+                />
+              </Grid>
+
+              {/* Machine selector */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  select
+                  label="Machine"
+                  name="machine"
+                  value={this.state.machine}
+                  onChange={this.handleChange}
                 >
-                    <Backdrop
-                        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 10 }}
-                        open={this.state.is_loading}
-                    >
-                        <CircularProgress />
-                    </Backdrop>
-                    <AppBar sx={{ position: 'relative' }}>
-                        <Toolbar>
-                            <IconButton
-                                edge="start"
-                                color="inherit"
-                                onClick={this.props.handleClose}
-                                aria-label="close"
-                            >
-                                <CloseIcon />
-                            </IconButton>
-                            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-                                {fault ? "Edit " : "Add "} Faults
-                            </Typography>
-                            <Button autoFocus color="inherit" onClick={this.handleRegister}>
-                                {fault ? "Edit " : "Create "}
-                            </Button>
-                        </Toolbar>
-                    </AppBar>
-                    <Grid container spacing={2} sx={{ p: 5 }}>
-                        <Accordion defaultExpanded sx={{width:"100%"}}>
-                            <AccordionSummary
-                                expandIcon={<ExpandMoreIcon />}
-                                aria-controls="panel1-content"
-                                id="panel1-header"
-                            >
-                                Basic Info
-                            </AccordionSummary>
-                            <AccordionDetails>
-                         
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="name"
-                                        placeholder='Name'
-                                        name='name'
-                                        type='text'
-                                        aria-describedby='name-text'
-                                        onChange={this.handleChange}
-                                        value={this.state.name}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="name-text">
-                                        <strong>Required *</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="name-text">
-                                        Enter a name for the fault
-                                    </FormHelperText>
-                                </FormControl>
+                  {assets.map(asset => (
+                    <MenuItem key={asset.uuid} value={asset.uuid}>
+                      {asset.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
 
-                               
+            </Grid>
+          </Paper>
 
-                            
-
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <InputLabel id="asset-label">Asset</InputLabel>
-                                    <Select
-                                        labelId="asset-label"
-                                        id="machine"
-                                        name='machine'
-                                        value={this.state.machine}
-                                        onChange={this.handleChange}
-                                        autoComplete='off'
-                                    >
-                                        {assets.map(asset => (
-                                            <MenuItem key={asset.uuid} value={asset.uuid}>{asset.name}</MenuItem>
-                                        ))}
-                                    </Select>
-                                    <FormHelperText id="asset-text">
-                                        Select the asset for this fault
-                                    </FormHelperText>
-                                </FormControl>
-                            </AccordionDetails>
-                        </Accordion>
-
-                    </Grid>
-
-                </Dialog>
-            </>
-        );
-    }
+        </Box>
+      </Drawer>
+    );
+  }
 }
 
 FaultEditForm.contextType = AuthContext;

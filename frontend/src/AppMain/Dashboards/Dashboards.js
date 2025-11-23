@@ -4,10 +4,11 @@ import Live from './Live/Live';
 import Energy from './Energy/Energy';
 import Oee from './Oee/Oee';
 import Downtimes from './Downtimes/Downtimes';
+import AppLayout from "../../Layout/AppLayout";
 class Dashboards extends Component {
     render() {
         return (
-            <>
+            <AppLayout>
             <Routes>
                   
                     <Route path="/live" Component={Live} /> 
@@ -18,7 +19,7 @@ class Dashboards extends Component {
 
                 </Routes>
                 
-            </>
+            </AppLayout>
         );
     }
 }

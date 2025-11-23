@@ -79,23 +79,23 @@ class EnhancedTableToolbar extends Component {
        
         return (
             <>
-            {this.state.show_details && <> 
+            <> 
             <UserModal 
                         open={this.state.show_details} 
                         user={ user}
                         handleClose={this.HandleCloseView}
-                        ></UserModal> </> }
+                        ></UserModal> </> 
             
             
             
             
-            {this.state.show_add_form && <UserForm 
+            <UserForm 
                           show={this.state.show_add_form}
                           asset={this.state.edit_user? user:null}
                           handleClose={this.handleCloseForm}
                           OnUpdate={this.HandleOnUpdate}
                           
-                          ></UserForm>}
+                          ></UserForm>
                  <Toolbar sx={{pl: { sm: 2 },pr: { xs: 1, sm: 1 }, ...(numSelected > 0 && {bgcolor: (theme) =>
                           alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
                             }),

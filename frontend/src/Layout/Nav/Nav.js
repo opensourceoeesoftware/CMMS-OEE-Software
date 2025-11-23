@@ -1,78 +1,107 @@
-import React, { Component } from 'react';
-import {Link,Navigate} from "react-router-dom"
-import AuthContext from '../../AuthProvider/AuthContext';
-import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
-class Nav extends Component {
-  constructor(props){
-    super(props)
-  }
+// src/Layout/Nav/Nav.jsx
+import React from "react";
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Box,
+  Menu,
+  MenuItem
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import AccountCircle from "@mui/icons-material/AccountCircle";
+import { Link as RouterLink } from "react-router-dom";
+import AuthContext from "../../AuthProvider/AuthContext";
 
-  
-    render() {
-        return (
-    
-<nav className="main-header navbar navbar-expand navbar-white navbar-light">
- 
-  <ul className="navbar-nav">
-    <li className="nav-item">
-      <a className="nav-link" data-widget="pushmenu" href="#" role="button"><i className="fas fa-bars" style={{color:'primary.main'}} /></a>
-    </li>
-    <li className="nav-item d-none d-sm-inline-block" >
-      <Link to={'/dashboards/live'} replace={true} className='nav-link' style={{color:'primary.main'}}>Dashboards</Link>
-     
-    </li>
-    <li className="nav-item d-none d-sm-inline-block" >
-      <Link to={'/cmms/dashboards/assets'} replace={true} className='nav-link' style={{color:'primary.main'}}>CMMS</Link>
-     
-    </li>
-    
-    <li className="nav-item d-none d-sm-inline-block" >
-      <Link to={'/admin/assets/table'} replace={true} className='nav-link' style={{color:'primary.main'}}>Admin</Link>
-     
-    </li>
-    
-    
-    
-  </ul>
+const FULL_WIDTH = 240;
+const MINI_WIDTH = 70;
 
-  <ul className="navbar-nav ml-auto">
-  
-    {/* Notifications Dropdown Menu */}
-    <li className="nav-item dropdown">
-      <a className="nav-link" data-toggle="dropdown" href="#">
-        <i className="far fa-user" style={{color:'primary.main'}}/>
-        
-      </a>
-      <div className="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-        <span className="dropdown-item dropdown-header">Profile actions</span>
-        <div className="dropdown-divider" />
-        <a href="#" className="dropdown-item" onClick={this.context.logout}>
-          <i className="fas fa-arrow-right mr-2" style={{color:'primary.main'}} /> Logout
-          
-        </a>
-        <a href="#" className="dropdown-item" >
-          <PersonRemoveIcon sx={{ color: 'primary.main' }} /> Delete profile (comming soon)
-          
-        </a>
-        <div className="dropdown-divider" />
-      
-       
-        <div className="dropdown-divider" />
-        <a href="#" className="dropdown-item dropdown-footer"></a>
-      </div>
-    </li>
-    <li className="nav-item">
-      <a className="nav-link" data-widget="fullscreen" href="#" role="button">
-        <i className="fas fa-expand-arrows-alt" style={{color:'primary.main'}} />
-      </a>
-    </li>
-  
-  </ul>
-</nav>
+export default function Nav({ onToggleSidebar, drawerOpen }) {
+  const { logout } = React.useContext(AuthContext);
+  const [anchorEl, setAnchorEl] = React.useState(null);
 
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
 
-        );
-    }
+  const appBarLeft = drawerOpen ? FULL_WIDTH : MINI_WIDTH;
+
+  return (
+    <AppBar
+      position="fixed"
+      color="default"
+      elevation={0}
+      sx={(theme) => ({
+        zIndex: theme.zIndex.drawer - 1,
+        ml: `${appBarLeft}px`,
+        width: `calc(100% - ${appBarLeft}px)`,
+        borderBottom: "1px solid",
+        borderColor: "divider",
+        transition: theme.transitions.create(["width", "margin"], {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.shortest
+        })
+      })}
+    >
+      <Toolbar>
+
+        {/* Burger button */}
+        <IconButton
+          edge="start"
+          onClick={onToggleSidebar}
+          sx={{ mr: 2 }}
+        >
+          <MenuIcon />
+        </IconButton>
+
+        {/* Left links */}
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexGrow: 1 }}>
+          <Typography
+            component={RouterLink}
+            to="/dashboards/live"
+            sx={{ textDecoration: "none", color: "primary.main", fontWeight: 600 }}
+          >
+            Dashboards
+          </Typography>
+
+          <Typography
+            component={RouterLink}
+            to="/cmms/dashboards/assets"
+            sx={{ textDecoration: "none", color: "primary.main", fontWeight: 600 }}
+          >
+            CMMS
+          </Typography>
+
+          <Typography
+            component={RouterLink}
+            to="/admin/assets/table"
+            sx={{ textDecoration: "none", color: "primary.main", fontWeight: 600 }}
+          >
+            Admin
+          </Typography>
+        </Box>
+
+        {/* Right profile menu */}
+        <IconButton onClick={handleMenuOpen}>
+          <AccountCircle />
+        </IconButton>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          keepMounted
+        >
+          <MenuItem
+            onClick={() => {
+              handleMenuClose();
+              logout();
+            }}
+          >
+            Logout
+          </MenuItem>
+          <MenuItem disabled>Delete profile (coming soon)</MenuItem>
+        </Menu>
+      </Toolbar>
+    </AppBar>
+  );
 }
-Nav.contextType = AuthContext;
-export default Nav;

@@ -1,7 +1,5 @@
 
 import React, { Component } from 'react';
-import Nav from '../../../Layout/Nav/Nav';
-import Sidebar from '../../../Layout/Sidebar/Sidebar';
 import AuthContext from '../../../AuthProvider/AuthContext';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Typography from '@mui/material/Typography';
@@ -9,7 +7,6 @@ import { url } from '../../../Config';
 import Stack from '@mui/material/Stack';
 import ProductsDelete from '../ProductForm/ProductsDelete'
 import EnhancedTable from './Table';
-import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
 import {  Backdrop, CircularProgress } from '@mui/material';
 import { ToastContainer, toast } from 'react-toastify';
 import axios from 'axios';
@@ -136,8 +133,7 @@ class ProductsTable extends Component {
         ];
         return (
             <>
-                <Nav></Nav>
-                <Sidebar />
+
                 {this.state.delete_form && 
                 <ProductsDelete handleClose={this.onclose} 
                 HandleConfirm={this.onDeleteProducts} 

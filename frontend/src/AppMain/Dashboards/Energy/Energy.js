@@ -1,16 +1,13 @@
-import React, { Component } from 'react';
-import Nav from '../../../Layout/Nav/Nav';
-import Sidebar from '../../../Layout/Sidebar/Sidebar';
+import  { Component } from 'react';
+
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Typography from '@mui/material/Typography';
 import { Link as RouterLink } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import {  Backdrop, CircularProgress,Grid } from '@mui/material';
-import SensorsIcon from '@mui/icons-material/Sensors';
 import ElectricBoltIcon from '@mui/icons-material/ElectricBolt';
 import Stack from '@mui/material/Stack';
-import { url } from '../../../Config';
-import axios from 'axios';
+
 import AuthContext from '../../../AuthProvider/AuthContext';
 
 
@@ -65,8 +62,6 @@ class Energy extends Component {
                     <CircularProgress />
 
                 </Backdrop>
-                <Nav></Nav>
-                <Sidebar/>
                 <div className='content-wrapper'>
                 <div className='content-header'>
                         <Stack spacing={2} justifyContent={'space-between'} direction="row" sx={{mb:2,p:1}}>

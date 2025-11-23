@@ -1,20 +1,15 @@
-import React, { Component } from 'react';
-import Nav from '../../../Layout/Nav/Nav';
-import Sidebar from '../../../Layout/Sidebar/Sidebar';
+import  { Component } from 'react';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Typography from '@mui/material/Typography';
 import { Link as RouterLink } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import {  Backdrop, CircularProgress } from '@mui/material';
-import SensorsIcon from '@mui/icons-material/Sensors';
 import Stack from '@mui/material/Stack';
-import { url } from '../../../Config';
-import axios from 'axios';
 import AutoModeIcon from '@mui/icons-material/AutoMode';
 import AuthContext from '../../../AuthProvider/AuthContext';
 import OeeSelector from './Components/OeeSelector';
 import OeeGraphs from './Components/OeeGraph';
-import { Paper, Grid } from '@mui/material';
+import {  Grid } from '@mui/material';
 import LiveEvents from '../Live/Components/LiveEvents'
 const breadcrumbs = [
 
@@ -62,8 +57,7 @@ class Oee extends Component {
                     <CircularProgress />
 
                 </Backdrop>
-                <Nav></Nav>
-                <Sidebar/>
+
                 <div className='content-wrapper'>
                 <div className='content-header'>
                         <Stack spacing={2} justifyContent={'space-between'} direction="row" sx={{mb:2,p:1}}>

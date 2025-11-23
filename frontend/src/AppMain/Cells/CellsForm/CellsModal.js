@@ -1,69 +1,112 @@
 import React from 'react';
-import { Dialog,Modal, Box, Typography, Grid, Paper, Button, CardMedia, AppBar,
-    Toolbar,Slide,
-    IconButton, } from '@mui/material';
+import {
+  Drawer,
+  Box,
+  Typography,
+  Grid,
+  Paper,
+  CardMedia,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Divider
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
-    });
-const CellsModal = ({ open, handleClose, cell }) => {
-    return (
-        <Dialog
-            open={open}
-            onClose={handleClose}
-            aria-labelledby="cell-modal-title"
-            aria-describedby="cell-modal-description"
-            fullScreen
-            TransitionComponent={Transition}
-            
-        >
-           
-                <AppBar sx={{ position: 'relative' }}>
-                        <Toolbar>
-                            <IconButton
-                                edge="start"
-                                color="inherit"
-                                onClick={handleClose}
-                                aria-label="close"
-                            >
-                                <CloseIcon />
-                            </IconButton>
-                            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-                                View cell
-                            </Typography>
-                            
-                        </Toolbar>
-                    </AppBar>
 
-                <Grid container spacing={2} sx={{p:2}}>
-                    <Grid item xs={12} sm={2}>
-                        <CardMedia
-                            component="img"
-                            image={cell?.machine?.photo}
-                            alt={cell?.machine?.name}
-                            sx={{ maxHeight: 400, objectFit: 'cover', marginBottom: 2 }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={10}>
-                        <Paper elevation={0} sx={{ p: 2 ,height:"100%"}}>
-                            <Typography variant="h6" gutterBottom>
-                                Basic Info
-                            </Typography>
-                            <Typography variant="body1" gutterBottom>
-                                <strong>Cell Name:</strong> {cell?.name}
-                            </Typography>
-                            <Typography variant="body1" gutterBottom>
-                                <strong>Line Name:</strong> {cell?.machine?.name}
-                            </Typography>
-                      
-                        </Paper>
-                    </Grid>
-                </Grid>
-            
-             
-         
-        </Dialog>
-    );
+const CellsModal = ({ open, handleClose, cell }) => {
+  if (!cell) return null;
+
+  const machine = cell.machine;
+
+  return (
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={handleClose}
+      PaperProps={{
+    sx: {
+      width: "50vw",       // main width
+      minWidth: 420,        // consistent min width
+      maxWidth: 720,        // consistent max width
+      display: "flex",
+      flexDirection: "column",
+      bgcolor: "background.default",
+    }
+  }}
+      ModalProps={{ keepMounted: true }}
+    >
+
+      {/* Header */}
+      <AppBar
+        elevation={0}
+        color="default"
+        sx={{
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+        }}
+      >
+        <Toolbar>
+          <IconButton edge="start" onClick={handleClose}>
+            <CloseIcon />
+          </IconButton>
+
+          <Typography sx={{ flex: 1 }} variant="h6">
+            View Cell
+          </Typography>
+        </Toolbar>
+      </AppBar>
+
+      {/* Content */}
+      <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
+
+        {/* BASIC INFO */}
+        <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
+          <Typography variant="h6" fontWeight={600}>
+            Basic Information
+          </Typography>
+          <Divider sx={{ my: 2 }} />
+
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={4}>
+              <CardMedia
+                component="img"
+                image={machine?.photo}
+                alt={machine?.name}
+                sx={{
+                  width: "100%",
+                  height: 220,
+                  objectFit: "cover",
+                  borderRadius: 1,
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={8}>
+              <Typography variant="body1" gutterBottom>
+                <strong>Cell Name:</strong> {cell.name}
+              </Typography>
+
+              <Typography variant="body1" gutterBottom>
+                <strong>Machine Name:</strong> {machine?.name}
+              </Typography>
+
+              <Typography variant="body1" gutterBottom>
+                <strong>Machine Type:</strong> {machine?.asset_type || "N/A"}
+              </Typography>
+
+              <Typography variant="body1" gutterBottom>
+                <strong>Status:</strong> {machine?.status || "Unknown"}
+              </Typography>
+            </Grid>
+          </Grid>
+        </Paper>
+
+      </Box>
+    </Drawer>
+  );
 };
 
 export default CellsModal;

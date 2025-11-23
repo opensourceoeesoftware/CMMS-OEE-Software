@@ -1,36 +1,16 @@
-import React, { Component } from 'react';
-import Nav from '../../Layout/Nav/Nav';
-import Sidebar from '../../Layout/Sidebar/Sidebar';
-import Typography from '@mui/material/Typography';
-import { Link } from 'react-router-dom';
+import  { Component } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
-import {  Backdrop, CircularProgress,Paper } from '@mui/material';
-import Breadcrumbs from '@mui/material/Breadcrumbs';
-import Stack from '@mui/material/Stack';
-import TuneIcon from '@mui/icons-material/Tune';
+import {  Backdrop, CircularProgress } from '@mui/material';
 
-import { Grid,Box,Select,MenuItem,Menu } from '@mui/material';
-import {Card,CardHeader,CardContent,IconButton} from '@mui/material';
-import { FormControl, FormHelperText, TextField,Button  } from '@mui/material';
+
+import { Grid,Select,MenuItem } from '@mui/material';
+import {Card,CardContent} from '@mui/material';
+import { FormControl } from '@mui/material';
 import axios from 'axios';
 import AuthContext from '../../AuthProvider/AuthContext';
 import OperatorButtons from './OperatorButtons';
 import { url } from '../../Config';
-const breadcrumbs = [
 
-    <Link
-        underline="hover"
-        key="2"
-        color="inherit"
-        href="/"
-
-    >
-        Home
-    </Link>,
-    <Typography key="3" color="text.primary">
-        Control
-    </Typography>,
-];
 class OperatorControl extends Component {
     constructor(propos) {
         super(propos)
@@ -138,8 +118,6 @@ class OperatorControl extends Component {
                  <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={this.state.is_loading}>
                     <CircularProgress />
                  </Backdrop>
-                <Nav></Nav>
-                <Sidebar />
                 <ToastContainer></ToastContainer>
              
                 <div className='content-wrapper'>

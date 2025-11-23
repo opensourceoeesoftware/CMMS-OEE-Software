@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import Nav from '../../../Layout/Nav/Nav';
-import Sidebar from '../../../Layout/Sidebar/Sidebar';
+
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Typography from '@mui/material/Typography';
 import { Link as RouterLink } from 'react-router-dom';
@@ -73,8 +72,6 @@ class Live extends Component {
                     <CircularProgress />
 
                 </Backdrop>
-                <Nav></Nav>
-                <Sidebar/>
                 <div className='content-wrapper'>
                 <div className='content-header'>
                         <Stack spacing={2} justifyContent={'space-between'} direction="row" sx={{mb:2,p:1}}>
@@ -91,7 +88,7 @@ class Live extends Component {
                          
                          return <Grid item md={6} xs={12} lg={3} key={value.uuid}>
 
-                                    <LineCard machine={value}></LineCard>
+                                    <LineCard machine={value} key={"machine" + value.uuid}></LineCard>
                                 </Grid>
                     })}
                 </Grid>

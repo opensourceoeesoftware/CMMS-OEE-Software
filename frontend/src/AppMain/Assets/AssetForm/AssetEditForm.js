@@ -3,18 +3,21 @@ import { url as url_base } from '../../../Config';
 
 import {
     Button,
-    Dialog,
+    Box,
     AppBar,
     Toolbar,
     IconButton,
     Typography,
-    Slide
+    Slide,
+    Drawer,
+    Paper,
+    Divider
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import {  toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import AuthContext from '../../../AuthProvider/AuthContext';
 import { FormControl, FormHelperText, Input, } from '@mui/material';
-import {  Grid } from '@mui/material';
+import { Grid } from '@mui/material';
 import { Backdrop, CircularProgress, MenuItem, TextField, Select } from '@mui/material';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -23,7 +26,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import axios from 'axios';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
+    return <Slide direction="left" ref={ref} {...props} />;
 });
 function formatDateForInput(date) {
     const d = new Date(date);
@@ -125,15 +128,53 @@ class AssetEditForm extends React.Component {
         }
         return false;
     }
+    componentDidUpdate(prevProps) {
+        if (prevProps.asset !== this.props.asset) {
+            const asset = this.props.asset;
+
+            this.setState({
+                name: asset?.name || '',
+                ref: asset?.ref || '',
+                photo: null,
+                asset_type: asset?.asset_type || 'Equipment',
+                location: asset?.location || '',
+                serial_number: asset?.serial_number || '',
+                purchase_date: asset
+                    ? new Date(asset.purchase_date).toISOString().slice(0, 16)
+                    : '',
+                warranty_expiration_date: asset
+                    ? new Date(asset.warranty_expiration_date).toISOString().slice(0, 16)
+                    : '',
+                cost: asset?.cost || '',
+                current_value: asset?.current_value || '',
+                running_hour_consumption_kw: asset?.running_hour_consumption_kw || 0,
+                on_hour_consumption_kw: asset?.on_hour_consumption_kw || 0,
+                running_hour_cost: asset?.running_hour_cost || 0,
+                on_hour_cost: asset?.on_hour_cost || 0,
+                status: asset?.status || 'Active',
+            });
+        }
+    }
+
     render() {
         const { asset } = this.props;
         return (
             <>
-                <Dialog
-                    fullScreen
+                <Drawer
+                    anchor="right"
                     open={this.props.show}
                     onClose={this.props.handleClose}
-                    TransitionComponent={Transition}
+                    PaperProps={{
+    sx: {
+      width: "50vw",       // main width
+      minWidth: 420,        // consistent min width
+      maxWidth: 720,        // consistent max width
+      display: "flex",
+      flexDirection: "column",
+      bgcolor: "background.default",
+    }
+  }}
+                    ModalProps={{ keepMounted: true }}
                 >
                     <Backdrop
                         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 10 }}
@@ -141,308 +182,271 @@ class AssetEditForm extends React.Component {
                     >
                         <CircularProgress />
                     </Backdrop>
-                    <AppBar sx={{ position: 'relative' }}>
+                    <AppBar
+                        elevation={0}
+                        color="default"
+                        sx={{
+                            borderBottom: "1px solid",
+                            borderColor: (theme) => theme.palette.divider,
+                            position: "sticky",
+                            top: 0,
+                            zIndex: 10,
+                        }}
+                    >
                         <Toolbar>
-                            <IconButton
-                                edge="start"
-                                color="inherit"
-                                onClick={this.props.handleClose}
-                                aria-label="close"
-                            >
+                            <IconButton edge="start" onClick={this.props.handleClose}>
                                 <CloseIcon />
                             </IconButton>
-                            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-                                {asset ? "Edit " : "Add "} asset
+
+                            <Typography sx={{ flex: 1 }} variant="h6">
+                                {asset ? "Edit Asset" : "New Asset"}
                             </Typography>
-                            <Button autoFocus color="inherit" onClick={this.handleRegister}>
-                                {asset ? "Edit " : "Create "}
+
+                            <Button variant="contained" onClick={this.handleRegister}>
+                                {asset ? "Save" : "Create"}
                             </Button>
                         </Toolbar>
                     </AppBar>
-                    <Grid container spacing={2} sx={{ p: 5 }}>
-                        <Accordion defaultExpanded sx={{ mb: 2, width: "100%" }}>
-                            <AccordionSummary
-                                expandIcon={<ExpandMoreIcon />}
-                                aria-controls="panel1-content"
-                                id="panel1-header"
-                            >
-                                Basic Info
-                            </AccordionSummary>
-                            <AccordionDetails>
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="name"
-                                        placeholder='Name'
-                                        name='name'
-                                        type='text'
-                                        aria-describedby='asset-text'
-                                        onChange={this.handleChange}
-                                        value={this.state.name}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="asset-text">
-                                        <strong>Required *</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="asset-text">
-                                        Enter a name that everybody knows
-                                    </FormHelperText>
-                                </FormControl>
+                    <Box
+                        sx={{
+                            flex: 1,
+                            overflowY: "auto",
+                            px: 0,
+                            py: 0,
+                        }}
+                    >
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="ref"
-                                        placeholder='Reference'
-                                        name='ref'
-                                        type='text'
-                                        onChange={this.handleChange}
-                                        value={this.state.ref}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="asset-text">
-                                        <strong>Required *</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="ref-text">
-                                        Enter a reference, Ideally unique
-                                    </FormHelperText>
-                                </FormControl>
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="serial_number"
-                                        placeholder='Serial Number'
-                                        name='serial_number'
-                                        type='text'
-                                        onChange={this.handleChange}
-                                        value={this.state.serial_number}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="asset-text">
-                                        <strong>Required *</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="serial-text">
-                                        Enter the serial number of your asset
-                                    </FormHelperText>
-                                </FormControl>
+                        <Grid container spacing={2} sx={{ p: 2 }}>
+                       <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="location"
-                                        placeholder='Location'
-                                        name='location'
-                                        type='text'
-                                        onChange={this.handleChange}
-                                        value={this.state.location}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="asset-text">
-                                        <strong>Required *</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="location-text">
-                                        Enter a location, this can be a department, or a physical location (ex. Client site etc...)
-                                    </FormHelperText>
-                                </FormControl>
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="on_hour_consumption_kw"
-                                        placeholder='On Consumption Kw/h'
-                                        name='on_hour_consumption_kw'
-                                        type='number'
-                                        onChange={this.handleChange}
-                                        value={this.state.on_hour_consumption_kw}
-                                        autoComplete='off'
-                                    />
+  {/* SECTION 1 — BASIC INFORMATION */}
+  <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
+    <Typography variant="h6" fontWeight={600}>Basic Information</Typography>
+    <Divider sx={{ my: 2 }} />
 
-                                    <FormHelperText id="on_hour_consumption_kw-text">
-                                        <strong>On Consumption Kw/h</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="on_hour_consumption_kw-text">
-                                        How many Kw/h the machine consumes in heating phase
-                                    </FormHelperText>
-                                </FormControl>
+    <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <TextField
+          label="Name"
+          name="name"
+          fullWidth
+          value={this.state.name}
+          onChange={this.handleChange}
+        />
+      </Grid>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="running_hour_consumption_kw"
-                                        placeholder='Running Consumption Kw/h'
-                                        name='running_hour_consumption_kw'
-                                        type='number'
-                                        onChange={this.handleChange}
-                                        value={this.state.running_hour_consumption_kw}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="running_hour_consumption_kw-text">
-                                        <strong>Running Consumption Kw/h</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="on_hour_consumption_kw-text">
-                                        How many Kw/h the machine consumes in running phase
-                                    </FormHelperText>
-                                </FormControl>
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="on_hour_cost"
-                                        placeholder='On costs $'
-                                        name='on_hour_cost'
-                                        type='number'
-                                        onChange={this.handleChange}
-                                        value={this.state.on_hour_cost}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="on_hour_cost-text">
-                                        <strong>On costs $</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="on_hour_consumption_kw-text">
-                                        How many $ the machine costs in heating phase
-                                    </FormHelperText>
-                                </FormControl>
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="running_hour_cost"
-                                        placeholder='Running costs $'
-                                        name='running_hour_cost'
-                                        type='number'
-                                        onChange={this.handleChange}
-                                        value={this.state.running_hour_cost}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="running_hour_cost-text">
-                                        <strong>Running costs $</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="on_hour_consumption_kw-text">
-                                        How many $ the machine costs in running phase
-                                    </FormHelperText>
-                                </FormControl>
+      <Grid item xs={12}>
+        <TextField
+          label="Reference"
+          name="ref"
+          fullWidth
+          value={this.state.ref}
+          onChange={this.handleChange}
+        />
+      </Grid>
 
-                            </AccordionDetails>
-                        </Accordion>
+      <Grid item xs={12}>
+        <TextField
+          label="Serial Number"
+          name="serial_number"
+          fullWidth
+          value={this.state.serial_number}
+          onChange={this.handleChange}
+        />
+      </Grid>
 
-                        <Accordion>
-                            <AccordionSummary
-                                expandIcon={<ExpandMoreIcon />}
-                                aria-controls="panel2-content"
-                                id="panel2-header"
-                            >
-                                Other information
-                            </AccordionSummary>
-                            <AccordionDetails>
+      <Grid item xs={12}>
+        <TextField
+          label="Location"
+          name="location"
+          fullWidth
+          value={this.state.location}
+          onChange={this.handleChange}
+        />
+      </Grid>
+    </Grid>
+  </Paper>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <TextField
-                                        id="purchase_date"
-                                        label="Purchase Date"
-                                        type="datetime-local"
-                                        name="purchase_date"
-                                        InputLabelProps={{
-                                            shrink: true,
-                                        }}
-                                        onChange={this.handleDateChange}
-                                        value={this.state.purchase_date}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="purchase-text">
-                                        Enter the purchase date
-                                    </FormHelperText>
-                                </FormControl>
+  {/* SECTION 2 — ENERGY & COST INFORMATION */}
+  <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
+    <Typography variant="h6" fontWeight={600}>Energy & Cost</Typography>
+    <Divider sx={{ my: 2 }} />
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <TextField
-                                        id="warranty_expiration_date"
-                                        label="Warranty Expiration Date"
-                                        type="datetime-local"
-                                        name="warranty_expiration_date"
-                                        InputLabelProps={{
-                                            shrink: true,
-                                        }}
-                                        onChange={this.handleDateChange}
-                                        value={this.state.warranty_expiration_date}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="warranty-text">
-                                        Enter the date of the end of the warranty, this information is useful later on.
-                                    </FormHelperText>
-                                </FormControl>
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Select
-                                        id="status"
-                                        name='status'
-                                        value={this.state.status}
-                                        onChange={this.handleChange}
-                                        autoComplete='off'
-                                    >
-                                        <MenuItem value="Active">Active</MenuItem>
-                                        <MenuItem value="Inactive">Inactive</MenuItem>
-                                        <MenuItem value="Under Maintenance">Under Maintenance</MenuItem>
-                                        <MenuItem value="Retired">Retired</MenuItem>
-                                    </Select>
-                                    <FormHelperText id="location-text">
-                                        Choose the status of the asset, Default value is Inactive
-                                    </FormHelperText>
-                                </FormControl>
+    <Grid container spacing={2}>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          label="On-Hour Consumption (kW/h)"
+          name="on_hour_consumption_kw"
+          type="number"
+          fullWidth
+          value={this.state.on_hour_consumption_kw}
+          onChange={this.handleChange}
+        />
+      </Grid>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Select
-                                        id="asset_type"
-                                        name='asset_type'
-                                        value={this.state.asset_type}
-                                        onChange={this.handleChange}
-                                        autoComplete='off'
-                                    >
-                                        <MenuItem value="Vehicle">Vehicle</MenuItem>
-                                        <MenuItem value="Equipment">Equipment</MenuItem>
-                                        <MenuItem value="Building">Building</MenuItem>
-                                        <MenuItem value="Furniture">Furniture</MenuItem>
-                                        <MenuItem value="IT">IT</MenuItem>
-                                        <MenuItem value="Other">Other</MenuItem>
-                                    </Select>
-                                    <FormHelperText id="location-text">
-                                        Select the type of your asset
-                                    </FormHelperText>
-                                </FormControl>
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="cost"
-                                        placeholder='Cost'
-                                        name='cost'
-                                        type='number'
-                                        onChange={this.handleChange}
-                                        value={this.state.cost}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="cost-text">
-                                        The cost of your asset
-                                    </FormHelperText>
-                                </FormControl>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          label="Running Consumption (kW/h)"
+          name="running_hour_consumption_kw"
+          type="number"
+          fullWidth
+          value={this.state.running_hour_consumption_kw}
+          onChange={this.handleChange}
+        />
+      </Grid>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="current_value"
-                                        placeholder='Current Value'
-                                        name='current_value'
-                                        type='number'
-                                        onChange={this.handleChange}
-                                        value={this.state.current_value}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="currentvalue-text">
-                                        The actual value for example in case of depreciation
-                                    </FormHelperText>
-                                </FormControl>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          label="On-Hour Cost ($)"
+          name="on_hour_cost"
+          type="number"
+          fullWidth
+          value={this.state.on_hour_cost}
+          onChange={this.handleChange}
+        />
+      </Grid>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="photo"
-                                        type='file'
-                                        name='photo'
-                                        onChange={this.handleFileChange}
-                                    />
-                                    <FormHelperText id="currentvalue-text">
-                                        The photo of your Asset
-                                    </FormHelperText>
-                                </FormControl>
-                            </AccordionDetails>
-                        </Accordion>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          label="Running Cost ($)"
+          name="running_hour_cost"
+          type="number"
+          fullWidth
+          value={this.state.running_hour_cost}
+          onChange={this.handleChange}
+        />
+      </Grid>
+    </Grid>
+  </Paper>
 
-                    </Grid>
+  {/* SECTION 3 — FINANCIAL INFORMATION */}
+  <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
+    <Typography variant="h6" fontWeight={600}>Financial Information</Typography>
+    <Divider sx={{ my: 2 }} />
 
-                </Dialog>
+    <Grid container spacing={2}>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          label="Cost ($)"
+          name="cost"
+          type="number"
+          fullWidth
+          value={this.state.cost}
+          onChange={this.handleChange}
+        />
+      </Grid>
+
+      <Grid item xs={12} sm={6}>
+        <TextField
+          label="Current Value ($)"
+          name="current_value"
+          type="number"
+          fullWidth
+          value={this.state.current_value}
+          onChange={this.handleChange}
+        />
+      </Grid>
+    </Grid>
+  </Paper>
+
+  {/* SECTION 4 — STATUS & TYPE */}
+  <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
+    <Typography variant="h6" fontWeight={600}>Status & Type</Typography>
+    <Divider sx={{ my: 2 }} />
+
+    <Grid container spacing={2}>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          label="Status"
+          name="status"
+          select
+          fullWidth
+          value={this.state.status}
+          onChange={this.handleChange}
+        >
+          <MenuItem value="Active">Active</MenuItem>
+          <MenuItem value="Inactive">Inactive</MenuItem>
+          <MenuItem value="Under Maintenance">Under Maintenance</MenuItem>
+          <MenuItem value="Retired">Retired</MenuItem>
+        </TextField>
+      </Grid>
+
+      <Grid item xs={12} sm={6}>
+        <TextField
+          label="Asset Type"
+          name="asset_type"
+          select
+          fullWidth
+          value={this.state.asset_type}
+          onChange={this.handleChange}
+        >
+          <MenuItem value="Vehicle">Vehicle</MenuItem>
+          <MenuItem value="Equipment">Equipment</MenuItem>
+          <MenuItem value="Building">Building</MenuItem>
+          <MenuItem value="Furniture">Furniture</MenuItem>
+          <MenuItem value="IT">IT</MenuItem>
+          <MenuItem value="Other">Other</MenuItem>
+        </TextField>
+      </Grid>
+    </Grid>
+  </Paper>
+
+  {/* SECTION 5 — DATES */}
+  <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
+    <Typography variant="h6" fontWeight={600}>Dates</Typography>
+    <Divider sx={{ my: 2 }} />
+
+    <Grid container spacing={2}>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          label="Purchase Date"
+          name="purchase_date"
+          type="datetime-local"
+          fullWidth
+          InputLabelProps={{ shrink: true }}
+          value={this.state.purchase_date}
+          onChange={this.handleDateChange}
+        />
+      </Grid>
+
+      <Grid item xs={12} sm={6}>
+        <TextField
+          label="Warranty Expiration Date"
+          name="warranty_expiration_date"
+          type="datetime-local"
+          fullWidth
+          InputLabelProps={{ shrink: true }}
+          value={this.state.warranty_expiration_date}
+          onChange={this.handleDateChange}
+        />
+      </Grid>
+    </Grid>
+  </Paper>
+
+  {/* SECTION 6 — PHOTO */}
+  <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
+    <Typography variant="h6" fontWeight={600}>Photo</Typography>
+    <Divider sx={{ my: 2 }} />
+
+    <Button variant="outlined" component="label">
+      Upload Photo
+      <input type="file" hidden onChange={this.handleFileChange} />
+    </Button>
+
+    {this.state.photo && (
+      <Typography variant="body2" sx={{ mt: 1 }}>
+        Selected: {this.state.photo.name}
+      </Typography>
+    )}
+  </Paper>
+
+</Box>
+
+
+                        </Grid>
+                    </Box>
+
+                </Drawer>
 
             </>
         );

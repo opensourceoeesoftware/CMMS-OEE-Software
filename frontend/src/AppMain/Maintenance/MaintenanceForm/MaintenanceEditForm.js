@@ -1,433 +1,411 @@
 import * as React from 'react';
-import { url as url_base} from '../../../Config';
+import { url as url_base } from '../../../Config';
+
 import {
-    Button,
-    Dialog,
-    ListItemText,
-    ListItemButton,
-    List,
-    Divider,
-    AppBar,
-    Toolbar,
-    IconButton,
-    Typography,
-    Slide
+  Button,
+  Box,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Slide,
+  Drawer,
+  Paper,
+  Divider,
+  Grid,
+  TextField,
+  MenuItem,
+  Backdrop,
+  CircularProgress
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { ToastContainer, toast } from 'react-toastify';
-import AuthContext from '../../../AuthProvider/AuthContext';
-import { FormControl, FormHelperText, Input, InputLabel } from '@mui/material';
-import { CardHeader, CardContent, CardActions, Card, Grid } from '@mui/material';
-import { Backdrop, CircularProgress, MenuItem, TextField, Select } from '@mui/material';
-import Accordion from '@mui/material/Accordion';
-import AccordionActions from '@mui/material/AccordionActions';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import axios from 'axios';
+import { toast } from 'react-toastify';
+import AuthContext from '../../../AuthProvider/AuthContext';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
+  return <Slide direction="left" ref={ref} {...props} />;
 });
-function formatDateForInput(date) {
-    const d = new Date(date);
-    const pad = (n) => n < 10 ? '0' + n : n;
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
-}
 
 class MaintenancePlanForm extends React.Component {
-    constructor(props) {
-        super(props);
-        const { maintenancePlan } = props; // Receive the maintenancePlan object from props
-        this.state = {
-            is_loading: false,
-            name: maintenancePlan?.name || '',
-            ref: maintenancePlan?.ref || '',
-            
-            assigned_to: maintenancePlan?.assigned_to?.id || '',
-            asset: maintenancePlan?.asset?.uuid || '',
-            planned_starting_date: maintenancePlan ? maintenancePlan?.planned_starting_date?.slice(0, 16) : '',
-            planned_finished: maintenancePlan ? maintenancePlan?.planned_finished?.slice(0, 16) : '',
-            started_at: maintenancePlan ? maintenancePlan.started_at?.slice(0, 16) : '',
-            finished_at: maintenancePlan ? maintenancePlan.finished_at?.slice(0, 16) : '',
-            instructions: null,
-            type: maintenancePlan?.type || 'Planned',
-            priority: maintenancePlan?.priority || 'Medium',
-            status: maintenancePlan?.status || 'Pending',
-            estimated_cost: maintenancePlan?.estimated_cost || '',
-            menu_open: true
-        };
-        this.isBadForm = this.isBadForm.bind(this);
-        this.handleRegister = this.handleRegister.bind(this);
-        this.handleClose = this.handleClose.bind(this);
+  constructor(props) {
+    super(props);
+    const { maintenancePlan } = props;
+
+    this.state = {
+      is_loading: false,
+
+      // BASIC INFO
+      planned_starting_date: maintenancePlan?.planned_starting_date?.slice(0, 16) || "",
+      planned_finished: maintenancePlan?.planned_finished?.slice(0, 16) || "",
+      name: maintenancePlan?.name || "",
+      ref: maintenancePlan?.ref || "",
+      assigned_to: maintenancePlan?.assigned_to?.id || "",
+      asset: maintenancePlan?.asset?.uuid || "",
+
+      // OTHER INFO
+      started_at: maintenancePlan?.started_at?.slice(0, 16) || "",
+      finished_at: maintenancePlan?.finished_at?.slice(0, 16) || "",
+      type: maintenancePlan?.type || "Planned",
+      priority: maintenancePlan?.priority || "Medium",
+      status: maintenancePlan?.status || "Pending",
+      estimated_cost: maintenancePlan?.estimated_cost || "",
+      instructions: null
+    };
+  }
+
+  handleChange = (e) => {
+    this.setState({ [e.target.name]: e.target.value });
+  };
+
+  handleDateChange = (e) => {
+    this.setState({ [e.target.name]: e.target.value });
+  };
+
+  handleFileChange = (e) => {
+    this.setState({ instructions: e.target.files[0] });
+  };
+
+  isBadForm() {
+    const {
+      name,
+      ref,
+      assigned_to,
+      asset,
+      planned_starting_date,
+      planned_finished
+    } = this.state;
+
+    if (!name || !ref || !assigned_to || !asset || !planned_starting_date || !planned_finished) {
+      toast.error("Please fill in all required fields");
+      return true;
     }
 
-    handleDateChange = (e) => {
-        const { name, value } = e.target;
-        const isoValue = new Date(value).toISOString();
-        this.setState({ [name]: formatDateForInput(value) });
-    };
-    handleChange = (e) => {
-        const { name, value } = e.target;
-        this.setState({ [name]: value });
-    };
- 
-    handleChangeAssigned = (e) => {
-        const { name, value } = e.target;
-        
-        this.setState({ [name]: value });
-    };
+    return false;
+  }
 
-    handleFileChange = (e) => {
-        this.setState({ instructions: e.target.files[0] });
-    };
-    handleClose() {
-        this.setState({ ...this.state, menu_open: false });
-    }
-    handleRegister = async () => {
-        if (this.isBadForm()) return;
-        this.setState({ ...this.state,is_loading: true },async ()=>{
+  handleRegister = async () => {
+    if (this.isBadForm()) return;
 
-            
-            const formData = new FormData();
-            Object.keys(this.state).forEach(key => {
-                if (this.state[key])
-                    formData.append(key, this.state[key]);
-            });
-           
-            try {
-                const { maintenancePlan } = this.props; // Get the maintenancePlan object from props
-                const method = maintenancePlan ? 'patch' : 'post';
-                const url = url_base + '/api/v1/maintenances-plans/' + (maintenancePlan ? `${maintenancePlan.uuid}/` : '');
-    
-                const response = await axios({
-                    method: method,
-                    url: url,
-                    data: formData,
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        'Authorization': "Token " + this.context.state.token
-                    }
-                });
-    
-                toast.success(`Maintenance Plan ${maintenancePlan ? 'updated' : 'created'}`);
-                
-                    if(this.props.OnUpdate)
-                    this.props.OnUpdate();
-               
-            } catch (error) {
-                
-                toast.error("Something went wrong! Please try again. Hint: " + error?.response?.data['detail']);
-            } finally {
-                this.setState({ is_loading: false });
-            }
-        });
-    };
-    isBadForm() {
-        const { name, ref, created_by, assigned_to, asset , planned_starting_date , planned_finished } = this.state;
-        if (!name || !ref   || !asset || !assigned_to ||!planned_starting_date || !planned_finished ) {
-            toast.error("Please fill in all required fields");
-            return true;
+    this.setState({ is_loading: true });
+
+    const formData = new FormData();
+    Object.keys(this.state).forEach((key) => {
+      if (this.state[key] !== null && this.state[key] !== "")
+        formData.append(key, this.state[key]);
+    });
+
+    try {
+      const { maintenancePlan } = this.props;
+      const method = maintenancePlan ? "patch" : "post";
+      const url =
+        url_base +
+        "/api/v1/maintenances-plans/" +
+        (maintenancePlan ? `${maintenancePlan.uuid}/` : "");
+
+      await axios({
+        method,
+        url,
+        data: formData,
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: "Token " + this.context.state.token
         }
-        return false;
+      });
+
+      toast.success(
+        `Maintenance Plan ${maintenancePlan ? "updated" : "created"}`
+      );
+
+      if (this.props.OnUpdate) this.props.OnUpdate();
+    } catch (error) {
+      toast.error(
+        "Error: " + (error?.response?.data?.detail || "Please try again.")
+      );
+    } finally {
+      this.setState({ is_loading: false });
     }
-    render() {
-        const { maintenancePlan, users, assets } = this.props;
-    
-        
-        return (
-            <>
-                <Dialog
-                    fullScreen
-                    open={this.props.show}
-                    onClose={this.props.handleClose}
-                    TransitionComponent={Transition}
+  };
+  componentDidUpdate(prevProps) {
+  if (prevProps.maintenancePlan !== this.props.maintenancePlan) {
+    const m = this.props.maintenancePlan || {};
+
+    this.setState({
+      planned_starting_date: m?.planned_starting_date?.slice(0, 16) || "",
+      planned_finished: m?.planned_finished?.slice(0, 16) || "",
+      name: m?.name || "",
+      ref: m?.ref || "",
+      assigned_to: m?.assigned_to?.id || "",
+      asset: m?.asset?.uuid || "",
+      started_at: m?.started_at?.slice(0, 16) || "",
+      finished_at: m?.finished_at?.slice(0, 16) || "",
+      type: m?.type || "Planned",
+      priority: m?.priority || "Medium",
+      status: m?.status || "Pending",
+      estimated_cost: m?.estimated_cost || "",
+      instructions: null
+    });
+  }
+}
+
+
+  render() {
+    const { maintenancePlan, users, assets } = this.props;
+
+    return (
+      <Drawer
+        anchor="right"
+        open={this.props.show}
+        onClose={this.props.handleClose}
+        PaperProps={{
+          sx: {
+            width: "50vw",
+            minWidth: 420,
+            maxWidth: 720,
+            display: "flex",
+            flexDirection: "column",
+            bgcolor: "background.default"
+          }
+        }}
+        ModalProps={{ keepMounted: true }}
+      >
+        {/* LOADING BACKDROP */}
+        <Backdrop
+          sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 10 }}
+          open={this.state.is_loading}
+        >
+          <CircularProgress />
+        </Backdrop>
+
+        {/* HEADER */}
+        <AppBar
+          elevation={0}
+          color="default"
+          sx={{
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            position: "sticky",
+            top: 0,
+            zIndex: 10
+          }}
+        >
+          <Toolbar>
+            <IconButton edge="start" onClick={this.props.handleClose}>
+              <CloseIcon />
+            </IconButton>
+
+            <Typography sx={{ flex: 1 }} variant="h6">
+              {maintenancePlan ? "Edit Maintenance Plan" : "New Maintenance Plan"}
+            </Typography>
+
+            <Button variant="contained" onClick={this.handleRegister}>
+              {maintenancePlan ? "Save" : "Create"}
+            </Button>
+          </Toolbar>
+        </AppBar>
+
+        {/* CONTENT */}
+        <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
+
+          {/* SECTION 1 - BASIC INFO */}
+          <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
+            <Typography variant="h6" fontWeight={600}>
+              Basic Information
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Planned Start"
+                  type="datetime-local"
+                  name="planned_starting_date"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={this.state.planned_starting_date}
+                  onChange={this.handleDateChange}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Planned Finish"
+                  type="datetime-local"
+                  name="planned_finished"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={this.state.planned_finished}
+                  onChange={this.handleDateChange}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="Name"
+                  name="name"
+                  fullWidth
+                  value={this.state.name}
+                  onChange={this.handleChange}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="Reference"
+                  name="ref"
+                  fullWidth
+                  value={this.state.ref}
+                  onChange={this.handleChange}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="Assigned To"
+                  name="assigned_to"
+                  select
+                  fullWidth
+                  value={this.state.assigned_to}
+                  onChange={this.handleChange}
                 >
-                    <Backdrop
-                        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 10 }}
-                        open={this.state.is_loading}
-                    >
-                        <CircularProgress />
-                    </Backdrop>
-                    <AppBar sx={{ position: 'relative' }}>
-                        <Toolbar>
-                            <IconButton
-                                edge="start"
-                                color="inherit"
-                                onClick={this.props.handleClose}
-                                aria-label="close"
-                            >
-                                <CloseIcon />
-                            </IconButton>
-                            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-                                {maintenancePlan ? "Edit " : "Add "} Maintenance Plan
-                            </Typography>
-                            <Button autoFocus color="inherit" onClick={this.handleRegister}>
-                                {maintenancePlan ? "Edit " : "Create "}
-                            </Button>
-                        </Toolbar>
-                    </AppBar>
-                    <Grid container spacing={2} sx={{ p: 5 }}>
-                        <Accordion defaultExpanded sx={{width:"100%"}}>
-                            <AccordionSummary
-                                expandIcon={<ExpandMoreIcon />}
-                                aria-controls="panel1-content"
-                                id="panel1-header"
-                            >
-                                Basic Info
-                            </AccordionSummary>
-                            <AccordionDetails>
-                            <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <TextField
-                                        id="planned_starting_date"
-                                        label="Planned Starting Date"
-                                        type="datetime-local"
-                                        name="planned_starting_date"
-                                        InputLabelProps={{
-                                            shrink: true,
-                                        }}
-                                        onChange={this.handleDateChange}
-                                        value={this.state.planned_starting_date}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="plannedstartdate-text">
-                                        Enter the planned starting date
-                                    </FormHelperText>
-                                </FormControl>
+                  {users.map((u) => (
+                    <MenuItem key={u?.user?.id} value={u?.user?.id}>
+                      {u?.user?.username}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <TextField
-                                        id="planned_finished"
-                                        label="Planned Finished Date"
-                                        type="datetime-local"
-                                        name="planned_finished"
-                                        InputLabelProps={{
-                                            shrink: true,
-                                        }}
-                                        onChange={this.handleDateChange}
-                                        value={this.state.planned_finished}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="plannedfinished-text">
-                                        Enter the planned finished date
-                                    </FormHelperText>
-                                </FormControl>
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="name"
-                                        placeholder='Name'
-                                        name='name'
-                                        type='text'
-                                        aria-describedby='name-text'
-                                        onChange={this.handleChange}
-                                        value={this.state.name}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="name-text">
-                                        <strong>Required *</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="name-text">
-                                        Enter a name for the maintenance plan
-                                    </FormHelperText>
-                                </FormControl>
+              <Grid item xs={12}>
+                <TextField
+                  label="Asset"
+                  name="asset"
+                  select
+                  fullWidth
+                  value={this.state.asset}
+                  onChange={this.handleChange}
+                >
+                  {assets.map((asset) => (
+                    <MenuItem key={asset.uuid} value={asset.uuid}>
+                      {asset.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            </Grid>
+          </Paper>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="ref"
-                                        placeholder='Reference'
-                                        name='ref'
-                                        type='text'
-                                        onChange={this.handleChange}
-                                        value={this.state.ref}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="ref-text">
-                                        <strong>Required *</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="ref-text">
-                                        Enter a reference, ideally unique
-                                    </FormHelperText>
-                                </FormControl>
+          {/* SECTION 2 - OTHER DETAILS */}
+          <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
+            <Typography variant="h6" fontWeight={600}>
+              Additional Information
+            </Typography>
+            <Divider sx={{ my: 2 }} />
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <InputLabel id="assigned_to-label">Assigned To</InputLabel>
-                                    <Select
-                                        labelId="assigned_to-label"
-                                        id="assigned_to"
-                                        name='assigned_to'
-                                        value={this.state.assigned_to}
-                                        onChange={this.handleChange}
-                                        autoComplete='off'
-                                    >
-                                        {users.map(profile_user => (
-                                            <MenuItem 
-                                            key={profile_user?.user?.id} 
-                                            value={profile_user?.user?.id}
-                                            
-                                            
-                                            
-                                            >{profile_user?.user?.username}</MenuItem>
-                                        ))}
-                                    </Select>
-                                    <FormHelperText id="assignedto-text">
-                                        Select the user assigned to this maintenance plan
-                                    </FormHelperText>
-                                </FormControl>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Actual Start"
+                  type="datetime-local"
+                  name="started_at"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={this.state.started_at}
+                  onChange={this.handleDateChange}
+                />
+              </Grid>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <InputLabel id="asset-label">Asset</InputLabel>
-                                    <Select
-                                        labelId="asset-label"
-                                        id="asset"
-                                        name='asset'
-                                        value={this.state.asset}
-                                        onChange={this.handleChange}
-                                        autoComplete='off'
-                                    >
-                                        {assets.map(asset => (
-                                            <MenuItem key={asset.uuid} value={asset.uuid}>{asset.name}</MenuItem>
-                                        ))}
-                                    </Select>
-                                    <FormHelperText id="asset-text">
-                                        Select the asset for this maintenance plan
-                                    </FormHelperText>
-                                </FormControl>
-                            </AccordionDetails>
-                        </Accordion>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Actual Finish"
+                  type="datetime-local"
+                  name="finished_at"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={this.state.finished_at}
+                  onChange={this.handleDateChange}
+                />
+              </Grid>
 
-                        <Accordion>
-                            <AccordionSummary
-                                expandIcon={<ExpandMoreIcon />}
-                                aria-controls="panel2-content"
-                                id="panel2-header"
-                            >
-                                Other Information
-                            </AccordionSummary>
-                            <AccordionDetails>
-                               
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Type"
+                  name="type"
+                  select
+                  fullWidth
+                  value={this.state.type}
+                  onChange={this.handleChange}
+                >
+                  <MenuItem value="Planned">Planned</MenuItem>
+                  <MenuItem value="UnPlanned">UnPlanned</MenuItem>
+                  <MenuItem value="Other">Other</MenuItem>
+                </TextField>
+              </Grid>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <TextField
-                                        id="started_at"
-                                        label="Started At"
-                                        type="datetime-local"
-                                        name="started_at"
-                                        InputLabelProps={{
-                                            shrink: true,
-                                        }}
-                                        onChange={this.handleDateChange}
-                                        value={this.state.started_at}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="startedat-text">
-                                        Enter the actual start date and time
-                                    </FormHelperText>
-                                </FormControl>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Priority"
+                  name="priority"
+                  select
+                  fullWidth
+                  value={this.state.priority}
+                  onChange={this.handleChange}
+                >
+                  <MenuItem value="Low">Low</MenuItem>
+                  <MenuItem value="Medium">Medium</MenuItem>
+                  <MenuItem value="High">High</MenuItem>
+                </TextField>
+              </Grid>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <TextField
-                                        id="finished_at"
-                                        label="Finished At"
-                                        type="datetime-local"
-                                        name="finished_at"
-                                        InputLabelProps={{
-                                            shrink: true,
-                                        }}
-                                        onChange={this.handleDateChange}
-                                        value={this.state.finished_at}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="finishedat-text">
-                                        Enter the actual finish date and time
-                                    </FormHelperText>
-                                </FormControl>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Status"
+                  name="status"
+                  select
+                  fullWidth
+                  value={this.state.status}
+                  onChange={this.handleChange}
+                >
+                  <MenuItem value="Pending">Pending</MenuItem>
+                  <MenuItem value="In Progress">In Progress</MenuItem>
+                  <MenuItem value="Completed">Completed</MenuItem>
+                  <MenuItem value="Cancelled">Cancelled</MenuItem>
+                </TextField>
+              </Grid>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Select
-                                        id="type"
-                                        name='type'
-                                        value={this.state.type}
-                                        onChange={this.handleChange}
-                                        autoComplete='off'
-                                    >
-                                        <MenuItem value="Planned">Planned</MenuItem>
-                                        <MenuItem value="UnPlanned">UnPlanned</MenuItem>
-                                        <MenuItem value="Other">Other</MenuItem>
-                                    </Select>
-                                    <FormHelperText id="type-text">
-                                        Select the type of maintenance plan
-                                    </FormHelperText>
-                                </FormControl>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Estimated Cost"
+                  name="estimated_cost"
+                  type="number"
+                  fullWidth
+                  value={this.state.estimated_cost}
+                  onChange={this.handleChange}
+                />
+              </Grid>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Select
-                                        id="priority"
-                                        name='priority'
-                                        value={this.state.priority}
-                                        onChange={this.handleChange}
-                                        autoComplete='off'
-                                    >
-                                        <MenuItem value="Low">Low</MenuItem>
-                                        <MenuItem value="Medium">Medium</MenuItem>
-                                        <MenuItem value="High">High</MenuItem>
-                                    </Select>
-                                    <FormHelperText id="priority-text">
-                                        Select the priority of the maintenance plan
-                                    </FormHelperText>
-                                </FormControl>
+              <Grid item xs={12}>
+                <Button variant="outlined" component="label">
+                  Upload Instructions
+                  <input type="file" hidden onChange={this.handleFileChange} />
+                </Button>
 
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Select
-                                        id="status"
-                                        name='status'
-                                        value={this.state.status}
-                                        onChange={this.handleChange}
-                                        autoComplete='off'
-                                    >
-                                        <MenuItem value="Pending">Pending</MenuItem>
-                                        <MenuItem value="In Progress">In Progress</MenuItem>
-                                        <MenuItem value="Completed">Completed</MenuItem>
-                                        <MenuItem value="Cancelled">Cancelled</MenuItem>
-                                    </Select>
-                                    <FormHelperText id="status-text">
-                                        Select the status of the maintenance plan
-                                    </FormHelperText>
-                                </FormControl>
-
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="estimated_cost"
-                                        placeholder='Estimated Cost'
-                                        name='estimated_cost'
-                                        type='number'
-                                        onChange={this.handleChange}
-                                        value={this.state.estimated_cost}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="estimatedcost-text">
-                                        Enter the estimated cost of the maintenance plan
-                                    </FormHelperText>
-                                </FormControl>
-
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="instructions"
-                                        type='file'
-                                        name='instructions'
-                                        onChange={this.handleFileChange}
-                                    />
-                                    <FormHelperText id="instructions-text">
-                                        Upload instructions for the maintenance plan
-                                    </FormHelperText>
-                                </FormControl>
-                            </AccordionDetails>
-                        </Accordion>
-                    </Grid>
-
-                </Dialog>
-            </>
-        );
-    }
+                {this.state.instructions && (
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Selected: {this.state.instructions.name}
+                  </Typography>
+                )}
+              </Grid>
+            </Grid>
+          </Paper>
+        </Box>
+      </Drawer>
+    );
+  }
 }
 
 MaintenancePlanForm.contextType = AuthContext;

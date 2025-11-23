@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import AuthContext from '../../AuthProvider/AuthContext';
 import { url } from '../../Config';
-import { FormControl, FormHelperText, Input, InputLabel,Grid } from '@mui/material';
-import { CardHeader, CardContent, CardActions, Card,  CardMedia } from '@mui/material';
+import { FormControl, FormHelperText, Input, InputLabel,Grid,Typography } from '@mui/material';
+import {  Card,  CardMedia } from '@mui/material';
 import { Button, Backdrop, Snackbar, Alert, CircularProgress } from '@mui/material';
 
 
@@ -66,95 +66,111 @@ class Login extends Component {
 
   }
 
-  render() {
+render() {
+  return (
+    <>
+      <Backdrop
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1300 }}
+        open={this.state.is_loading}
+      >
+        <CircularProgress />
+      </Backdrop>
 
+      <Grid
+        container
+        justifyContent="center"
+        alignItems="center"
+        sx={(theme) => ({
+    minHeight: "100vh",
+    background: theme.palette.loginBg.main
+  })}
+      >
+        <Card
+          elevation={6}
+          sx={{
+            width: { xs: "90%", sm: "450px" },
+            borderRadius: 3,
+            p: 3
+          }}
+        >
+          <CardMedia
+            component="img"
+            image="/g888.png"
+            sx={{
+              width: 90,
+              height: 90,
+              objectFit: "contain",
+              mx: "auto",
+              mt: 1
+            }}
+          />
 
-    return (
-      <>
-        <Grid container sx={{p:2, display: 'flex', flexWrap: 'wrap' ,height:'100vh'}}>
-          <Grid item xs={12} lg={6}  sx={{  margin: 'auto'}}>
+          <Typography variant="h5" align="center" sx={{ mt: 2, mb: 3 }}>
+            Login
+          </Typography>
 
-          <Card sx={{ minWidth: 275, width: '100%', margin: 'auto'}} >
-            <CardMedia
-              sx={{ height: 50, objectFit: 'contain', pt: 2 }}
-              image="/g888.png"
-              title="Logo"
-              component="img"
-            // sx={}
-            />
-            <Backdrop
-              sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-              open={this.state.is_loading}
-
-            >
-
-              <CircularProgress />
-            </Backdrop>
-            <CardHeader title="Login" sx={{ ml: 1 }}></CardHeader>
-            <CardContent>
-
-              <FormControl variant="standard" fullWidth sx={{ m: 1 }} >
-                <InputLabel htmlFor="username">Username</InputLabel>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <FormControl fullWidth variant="standard">
+                <InputLabel>Username</InputLabel>
                 <Input
-                  id="username"
-                  placeholder='Username'
-                  aria-describedby="username-text"
-                  name='username'
-                  type='text'
+                  name="username"
                   onChange={this.handleChange}
+                  type="text"
                 />
-                <FormHelperText id="username-text">
-                  Enter your username
-                </FormHelperText>
+                <FormHelperText>Enter your username</FormHelperText>
               </FormControl>
-              <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                <InputLabel htmlFor="username">Password</InputLabel>
+            </Grid>
+
+            <Grid item xs={12}>
+              <FormControl fullWidth variant="standard">
+                <InputLabel>Password</InputLabel>
                 <Input
-                  id="password"
-                  placeholder='Password'
-                  aria-describedby="password-text"
-                  name='password'
-                  type='password'
+                  name="password"
                   onChange={this.handleChange}
+                  type="password"
                 />
-                <FormHelperText id="password-text">
-                  Enter your password
-                </FormHelperText>
+                <FormHelperText>Enter your password</FormHelperText>
               </FormControl>
+            </Grid>
 
+            <Grid item xs={12}>
+              <Button
+                fullWidth
+                variant="contained"
+                size="large"
+                onClick={this.HandleLogin}
+              >
+                Login
+              </Button>
+            </Grid>
 
-
-            </CardContent>
-            <CardActions>
-              <Button variant="contained" sx={{ m: 1 }} onClick={this.HandleLogin}>Login</Button>
-
-
-            </CardActions>
-            <CardActions>
-
-              <Button href='/register' sx={{ mt: 1, ml: 1 }}> Register</Button>
-            </CardActions>
-            <CardActions>
-
-              <Button href='/password-reset-email' sx={{ ml: 1 }}> Reset Password</Button>
-            </CardActions>
-
-          </Card>
+            <Grid item xs={12}>
+              <Button fullWidth href="/register">
+                Register
+              </Button>
+              <Button fullWidth href="/password-reset-email">
+                Reset Password
+              </Button>
+            </Grid>
           </Grid>
-        </Grid>
-        <Snackbar open={this.state.show_message} autoHideDuration={6000} onClose={this.HandleCloseMessage} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} >
-          <Alert
+        </Card>
+      </Grid>
 
-            severity={this.state.severity}
-            variant="filled"
-            sx={{ width: '100%' }}
-          >
-            {this.state.message_text}
-          </Alert>
-        </Snackbar>
-      </>
-    );
-  }
+      <Snackbar
+        open={this.state.show_message}
+        autoHideDuration={4000}
+        onClose={this.HandleCloseMessage}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert severity={this.state.severity} variant="filled" sx={{ width: "100%" }}>
+          {this.state.message_text}
+        </Alert>
+      </Snackbar>
+    </>
+  );
+}
+
 }
 
 Login.contextType = AuthContext;

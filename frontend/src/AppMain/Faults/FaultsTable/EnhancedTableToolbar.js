@@ -78,23 +78,23 @@ class EnhancedTableToolbar extends Component {
         
         return (
             <>
-            {this.state.show_details && <> 
+             <> 
             <FaultsModal 
                         open={this.state.show_details} 
-                        cell={ asset}
+                        fault={ asset}
                         handleClose={this.HandleCloseView}
-                        ></FaultsModal> </> }
+                        ></FaultsModal> </> 
             
             
             
             
-            {this.state.show_add_form && <FaultEditForm 
+           <FaultEditForm 
                           show={this.state.show_add_form}
                           fault={this.state.edit_asset? asset:null}
                           handleClose={this.handleCloseForm}
                           OnUpdate={this.HandleOnUpdate}
                           assets = {assets}
-                          ></FaultEditForm>}
+                          ></FaultEditForm>
                  <Toolbar sx={{pl: { sm: 2 },pr: { xs: 1, sm: 1 }, ...(numSelected > 0 && {bgcolor: (theme) =>
                           alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
                             }),

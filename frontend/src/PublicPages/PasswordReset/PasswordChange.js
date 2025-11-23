@@ -1,146 +1,172 @@
-import React, { Component } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import { url } from '../../Config';
-import {
-  Link,Navigate
-} from "react-router-dom";
-import axios from 'axios';
-import {CardMedia, Button, } from '@mui/material';
-class PasswordChange extends Component {
-    constructor(props) {
-      super(props);
-      this.state = {
-        token: '',
-        password: '',
-        password2:'',
-        password_changed:false,
-        is_loading : false
-      };
-      this.HandleChangePassword = this.HandleChangePassword.bind(this);
-      this.handleChange = this.handleChange.bind(this);
-      
-    }
-  
-    handleChange(e) {
-      this.setState({ [e.target.name]: e.target.value });
-    }
-  
-    async HandleChangePassword() {
-      // toast("Wow so easy!");
-      const { token, password,password2 } = this.state;
+import React, { Component } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import { url } from "../../Config";
+import { Navigate, Link } from "react-router-dom";
+import axios from "axios";
 
-      if(password !== password2) {toast.error("Password Doesn't match!"); return}
-      this.setState({...this.state, is_loading:true},async()=>{
-        
-        try {
-          await axios.post(url +'/api/password_reset/confirm/', {
-            token: token,
-            password: password
-          });
-          this.setState({...this.state, password_changed:true})
-        } catch (error) {
-          toast.error("Username or password are wrong! Please try again");
-          this.setState({ ...this.state,is_loading:false });
-        }
-  
-      })
-     
-    }
-  
-    render() {
-      const { token, password, password2,password_changed } = this.state;
-  
-      return (<>
-      {password_changed && (
-          <Navigate to="/login" replace={true} />
-        )}
-      
-     
-        <div className="card w-50 h-100 ml-auto mr-auto mt-5">
-          <ToastContainer></ToastContainer>
-          <CardMedia
-                sx={{ height: 50, objectFit: 'contain', pt: 2 }}
-                image="/g888.png"
-                title="Logo"
-                component="img"
-            // sx={}
-            />
-            <div className='card-header'>
-                <h1 className='card-title'>Password Change</h1>
-            </div>
-         
-          <div className="card-body login-card-body">
-            <form>
-              <div className="input-group mb-3">
-                <input
-                  type="text"
-                  name="token"
-                  value={token}
-                  onChange={this.handleChange}
-                  className="form-control"
-                  placeholder="Enter your pin code from E-mail"
-                />
-                <div className="input-group-append">
-                  <div className="input-group-text">
-                    <span className="fas fa-user" />
-                  </div>
-                </div>
-              </div>
-              <div className="input-group mb-3">
-                <input
-                  type="password"
-                  name="password"
-                  value={password}
-                  onChange={this.handleChange}
-                  className="form-control"
-                  placeholder="Password"
-                />
-                <div className="input-group-append">
-                  <div className="input-group-text">
-                    <span className="fas fa-lock" />
-                  </div>
-                </div>
-              </div>
-              <div className="input-group mb-3">
-                <input
-                  type="password"
-                  name="password2"
-                  value={password2}
-                  onChange={this.handleChange}
-                  className="form-control"
-                  placeholder="Repeat Password"
-                />
-                <div className="input-group-append">
-                  <div className="input-group-text">
-                    <span className="fas fa-lock" />
-                  </div>
-                </div>
-              </div>
-            
-            </form>
-            <div className='row mt-4'>
-              <div className='col-12 mb-3'>
-                <Button variant='contained' onClick={this.HandleChangePassword}>Change password</Button>
-                {/* <button className='btn bg-success float-right' onClick={this.HandleChangePassword}>Change password</button> */}
-              </div>
-            </div>
-            <div className='row'>
-              <div className='col-8'>
-                <p>
-                  Or click here to <Link to={'/register'}>Register</Link>
-                </p>
-              </div>
-         
-            </div>
-          </div>
-          {this.state.is_loading && <div className='overlay'>
-          <i class="fas fa-2x fa-sync fa-spin"></i>
-          </div>}
-          
-        </div>
-        </>
-      );
-    }
+import {
+  Grid,
+  Card,
+  CardContent,
+  CardHeader,
+  CardMedia,
+  FormControl,
+  Input,
+  InputLabel,
+  FormHelperText,
+  Button,
+  Backdrop,
+  CircularProgress,
+  Typography
+} from "@mui/material";
+
+class PasswordChange extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      token: "",
+      password: "",
+      password2: "",
+      password_changed: false,
+      is_loading: false
+    };
+
+    this.handleChange = this.handleChange.bind(this);
+    this.HandleChangePassword = this.HandleChangePassword.bind(this);
   }
+
+  handleChange(e) {
+    this.setState({ [e.target.name]: e.target.value });
+  }
+
+  async HandleChangePassword() {
+    const { token, password, password2 } = this.state;
+
+    if (password !== password2) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    this.setState({ is_loading: true }, async () => {
+      try {
+        await axios.post(url + "/api/password_reset/confirm/", {
+          token,
+          password
+        });
+
+        this.setState({ password_changed: true });
+      } catch (error) {
+        toast.error("Something went wrong. Please try again.");
+      } finally {
+        this.setState({ is_loading: false });
+      }
+    });
+  }
+
+  render() {
+    const { token, password, password2, password_changed } = this.state;
+
+    return (
+      <>
+        {/* Redirect when done */}
+        {password_changed && <Navigate to="/login" replace />}
+
+        <ToastContainer />
+
+        {/* Background Container */}
+        <Grid
+          container
+          sx={(theme) => ({
+            minHeight: "100vh",
+            background: theme.palette.loginBg.main,
+            display: "flex",
+            p: 2
+          })}
+        >
+          <Grid item xs={12} sm={10} md={6} lg={4} sx={{ margin: "auto" }}>
+            <Card sx={{ width: "100%", borderRadius: 2 }}>
+              <CardMedia
+                sx={{ height: 60, objectFit: "contain", pt: 2 }}
+                image="/g888.png"
+                component="img"
+              />
+
+              {/* Loading overlay */}
+              <Backdrop
+                sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={this.state.is_loading}
+              >
+                <CircularProgress />
+              </Backdrop>
+
+              <CardHeader title="Change Password" />
+
+              <CardContent>
+                <Typography sx={{ mb: 3 }}>
+                  Enter the PIN sent to your email and choose a new password.
+                </Typography>
+
+                {/* PIN Input */}
+                <FormControl variant="standard" fullWidth sx={{ mb: 3 }}>
+                  <InputLabel>PIN Code</InputLabel>
+                  <Input
+                    name="token"
+                    value={token}
+                    onChange={this.handleChange}
+                    placeholder="Enter PIN from email"
+                  />
+                  <FormHelperText>The 6-digit reset code sent to your email</FormHelperText>
+                </FormControl>
+
+                {/* Password */}
+                <FormControl variant="standard" fullWidth sx={{ mb: 3 }}>
+                  <InputLabel>New Password</InputLabel>
+                  <Input
+                    name="password"
+                    type="password"
+                    value={password}
+                    onChange={this.handleChange}
+                    placeholder="Password"
+                  />
+                </FormControl>
+
+                {/* Repeat Password */}
+                <FormControl variant="standard" fullWidth sx={{ mb: 3 }}>
+                  <InputLabel>Repeat Password</InputLabel>
+                  <Input
+                    name="password2"
+                    type="password"
+                    value={password2}
+                    onChange={this.handleChange}
+                    placeholder="Repeat Password"
+                  />
+                </FormControl>
+
+                {/* Submit Button */}
+                <Button
+                  variant="contained"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  onClick={this.HandleChangePassword}
+                >
+                  Change Password
+                </Button>
+
+                {/* Links */}
+                <Typography sx={{ mt: 3 }}>
+                  Don't have an account? <Link to="/register">Register here</Link>
+                </Typography>
+
+                <Typography sx={{ mt: 1 }}>
+                  Go back to <Link to="/login">Login</Link>
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </>
+    );
+  }
+}
 
 export default PasswordChange;

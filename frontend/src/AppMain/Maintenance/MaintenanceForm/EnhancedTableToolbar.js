@@ -87,18 +87,18 @@ class EnhancedTableToolbar extends Component {
         
         return (
             <>
-            {this.state.show_details && <> 
+            <> 
             <AssetModal 
                         open={this.state.show_details} 
                         maintenance = {maintenance}
                         handleClose={this.HandleCloseView}
                         
-                        ></AssetModal> </> }
+                        ></AssetModal> </> 
             
             
             
             
-            {this.state.show_add_form && <MaintenanceEditForm 
+         <MaintenanceEditForm 
                           show={this.state.show_add_form}
                           maintenancePlan={this.state.edit_asset? maintenance:null}
                           handleClose={this.handleCloseForm}
@@ -106,7 +106,7 @@ class EnhancedTableToolbar extends Component {
                           users={users}
                           assets={this.props.assets}
                           
-                          ></MaintenanceEditForm>}
+                          ></MaintenanceEditForm>
                  <Toolbar sx={{pl: { sm: 2 },pr: { xs: 1, sm: 1 }, ...(numSelected > 0 && {bgcolor: (theme) =>
                           alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
                             }),

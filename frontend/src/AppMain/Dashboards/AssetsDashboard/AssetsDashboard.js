@@ -6,11 +6,10 @@ import axios from 'axios';
 import { url } from '../../../Config';
 import { ToastContainer, toast } from 'react-toastify';
 import {  Backdrop, CircularProgress } from '@mui/material';
-import Nav from '../../../Layout/Nav/Nav';
-import Sidebar from '../../../Layout/Sidebar/Sidebar';
+
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Typography from '@mui/material/Typography';
-import Link from '@mui/material/Link';
+
 import { Link as RouterLink } from 'react-router-dom';
 import Stack from '@mui/material/Stack';
 import AuthContext from '../../../AuthProvider/AuthContext';
@@ -63,7 +62,8 @@ class AssetsDashboard extends Component {
     render() {
         const {assets} = this.state
         return (
-            <>  <ToastContainer/>
+            <>  
+            <ToastContainer/>
                 <Backdrop 
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
                 open={this.state.is_loading}
@@ -71,8 +71,7 @@ class AssetsDashboard extends Component {
                     <CircularProgress />
 
                 </Backdrop>
-                <Nav></Nav>
-                <Sidebar/>
+
                 <div className='content-wrapper'>
                 <div className='content-header'>
                         <Stack spacing={2} justifyContent={'space-between'} direction="row" sx={{mb:2,p:1}}>

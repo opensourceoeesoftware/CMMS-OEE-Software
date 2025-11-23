@@ -136,8 +136,6 @@ class FaultsTable extends Component {
         ];
         return (
             <>
-                <Nav></Nav>
-                <Sidebar />
                 {this.state.delete_form && 
                 <FaultsDelete handleClose={this.onclose} 
                 HandleConfirm={this.onDeleteFaults} 

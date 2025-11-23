@@ -1,101 +1,99 @@
-import * as React from 'react';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardMedia from '@mui/material/CardMedia';
-import Typography from '@mui/material/Typography';
-import { Button, CardActionArea, CardActions,Box } from '@mui/material';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import Divider from '@mui/material/Divider';
-import Badge from '@mui/material/Badge';
-export default function MaintenanceCard({maintenance}) {
-    let status_color_map={
-        'Completed':'success',
-        'Pending':'warning',
-        'Cancelled':'error',
-        'In Progress':'info',
-    }
-    let type_color_map={
-        'Planned':'success',
-        'Other':'info',
-        'UnPlanned':'error',
-        'In Progress':'info',
-    }
-    let priority_color_map={
-        'Low':'success',
-        'Medium':'info',
-        'High':'error',
-        'In Progress':'info',
-    }
+import React from "react";
+import { 
+  Box,
+  Paper,
+  Typography,
+  Divider,
+  Chip,
+  Stack,
+} from "@mui/material";
 
-    let warranty_color = 'success.main'
-    if(new Date().getTime()> new Date(maintenance?.asset.warranty_expiration_date).getTime())
-        warranty_color = 'error.main'
+export default function MaintenanceCard({ maintenance }) {
+  const status_color_map = {
+      Completed: "success",
+      Pending: "warning",
+      Cancelled: "error",
+      "In Progress": "info",
+  };
+
+  const type_color_map = {
+      Planned: "success",
+      Other: "info",
+      UnPlanned: "error",
+  };
+
+  const priority_color_map = {
+      Low: "success",
+      Medium: "info",
+      High: "error",
+  };
 
   return (
-    <Card sx={{ maxWidth: '75%',width:'75%' }} elevation={0}>
-    <CardActionArea>
-     
-      <CardContent>
-     
-
-        <Typography gutterBottom variant="h5" component="div">
+    <Paper elevation={0} sx={{ width: "100%", p: 3, mb: 3 }}>
+      
+      {/* Title */}
+      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
         {maintenance?.name}
-        </Typography>
-      
-        <Divider></Divider>
-        <Box sx={{p:2}}>
+      </Typography>
 
-        <Typography  variant="body2" color="text.secondary">
-         <strong>Reference: </strong> {maintenance?.ref}
-        </Typography>
-        <Typography gutterBottom  variant="body2" color="text.secondary">
-         <strong>Type: </strong> {maintenance?.type}
-        </Typography>
-        <Typography  variant="body2" color="text.secondary">
-         <strong>Planned start: </strong> {new Date(maintenance?.planned_starting_date).toString()}
-        </Typography>
-        <Typography gutterBottom  variant="body2" color="text.secondary">
-         <strong>Planned finish: </strong> {new Date(maintenance?.planned_finished).toString()}
-        </Typography>
-        <Typography  variant="body2" color="text.secondary">
-         <strong>Assigned by: </strong> {maintenance?.created_by.username}
-        </Typography>
-        <Typography  variant="body2" color="text.secondary">
-         <strong>Assigned to: </strong> {maintenance?.assigned_to?.username}
-        </Typography>
-        <Typography variant="body1" gutterBottom>
-                            <strong>Instructions:</strong>{" "}
-                            {maintenance?.instructions && (
-                                <>
-                                
-                                <a href={maintenance?.instructions} target='blank' download>
-                                    Download File
-                                </a>
-                                </>
-                            )}
-                        </Typography>
-       
-        </Box>
-        <Divider></Divider>
-        
-      </CardContent>
-      
-    </CardActionArea>
-    <CardActions>
-    <Box sx={{p:2,pt:0}}>
+      <Divider sx={{ mb: 3 }} />
 
-    <Stack direction="row" spacing={1}>
-      <Chip label={maintenance?.status} color={status_color_map[maintenance?.status]}/>
-      <Chip label={maintenance?.type} color={type_color_map[maintenance?.type]}/>
-      <Chip label={maintenance?.priority} color={priority_color_map[maintenance?.priority]}/>
-      
-     
-    </Stack>
-    </Box>
+      {/* Basic Info */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="body1" sx={{ mb: 1 }}>
+          <strong>Reference:</strong> {maintenance?.ref}
+        </Typography>
 
-      
-    </CardActions>
-  </Card>
+        <Typography variant="body1" sx={{ mb: 1 }}>
+          <strong>Type:</strong> {maintenance?.type}
+        </Typography>
+
+        <Typography variant="body1" sx={{ mb: 1 }}>
+          <strong>Planned start:</strong>{" "}
+          {new Date(maintenance?.planned_starting_date).toLocaleString()}
+        </Typography>
+
+        <Typography variant="body1" sx={{ mb: 1 }}>
+          <strong>Planned finish:</strong>{" "}
+          {new Date(maintenance?.planned_finished).toLocaleString()}
+        </Typography>
+
+        <Typography variant="body1" sx={{ mb: 1 }}>
+          <strong>Assigned by:</strong> {maintenance?.created_by?.username}
+        </Typography>
+
+        <Typography variant="body1" sx={{ mb: 1 }}>
+          <strong>Assigned to:</strong> {maintenance?.assigned_to?.username}
+        </Typography>
+
+        {/* File */}
+        <Typography variant="body1">
+          <strong>Instructions:</strong>{" "}
+          {maintenance?.instructions && (
+            <a href={maintenance.instructions} target="_blank" rel="noreferrer">
+              Download file
+            </a>
+          )}
+        </Typography>
+      </Box>
+
+      <Divider sx={{ mb: 2 }} />
+
+      {/* Chips */}
+      <Stack direction="row" spacing={1}>
+        <Chip 
+          label={maintenance?.status} 
+          color={status_color_map[maintenance?.status]} 
+        />
+        <Chip 
+          label={maintenance?.type} 
+          color={type_color_map[maintenance?.type]} 
+        />
+        <Chip 
+          label={maintenance?.priority} 
+          color={priority_color_map[maintenance?.priority]} 
+        />
+      </Stack>
+    </Paper>
   );
 }

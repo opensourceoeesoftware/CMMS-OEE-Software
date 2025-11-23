@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PublicPages from '../PublicPages/PublicPages';
 import AuthContext from './AuthContext'
-import AppMain from '../AppMain/AppMain';
+import AppMain from '../AppMain/Routes';
 
 class AuthProvider extends Component {
     constructor(props) {

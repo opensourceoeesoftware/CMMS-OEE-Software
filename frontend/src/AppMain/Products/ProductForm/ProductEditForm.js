@@ -1,234 +1,211 @@
 import * as React from 'react';
-import { url as url_base} from '../../../Config';
+import { url as url_base } from '../../../Config';
 import {
-    Button,
-    Dialog,
-  
-    AppBar,
-    Toolbar,
-    IconButton,
-    Typography,
-    Slide
+  Drawer,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Button,
+  Box,
+  Grid,
+  Paper,
+  Divider,
+  TextField,
+  Backdrop,
+  CircularProgress,
 } from '@mui/material';
+
 import CloseIcon from '@mui/icons-material/Close';
+import axios from 'axios';
 import { toast } from 'react-toastify';
 import AuthContext from '../../../AuthProvider/AuthContext';
-import { FormControl, FormHelperText, Input, InputLabel } from '@mui/material';
-import {Grid } from '@mui/material';
-import { Backdrop, CircularProgress, MenuItem,  Select } from '@mui/material';
-import Accordion from '@mui/material/Accordion';
-
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import axios from 'axios';
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
-});
-function formatDateForInput(date) {
-    const d = new Date(date);
-    const pad = (n) => n < 10 ? '0' + n : n;
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
-}
 
 class ProductEditForm extends React.Component {
-    constructor(props) {
-        super(props);
-        const { product } = props; // Receive the product object from props
-        this.state = {
-            is_loading: false,
-            product_name: product?.product_name || '',
-            ideal_cycle: product?.ideal_cycle || 0,
-            product_id:product?.product_id || '',
-            menu_open: true
-        };
-        this.isBadForm = this.isBadForm.bind(this);
-        this.handleRegister = this.handleRegister.bind(this);
-        this.handleClose = this.handleClose.bind(this);
-    }
+  constructor(props) {
+    super(props);
 
+    const { product } = props;
 
-    handleChange = (e) => {
-        const { name, value } = e.target;
-        this.setState({ [name]: value });
-    };
- 
-    handleChangeAssigned = (e) => {
-        const { name, value } = e.target;
-        
-        this.setState({ [name]: value });
+    this.state = {
+      is_loading: false,
+      product_name: product?.product_name || '',
+      product_id: product?.product_id || '',
+      ideal_cycle: product?.ideal_cycle || 0,
     };
 
-  
-    handleClose() {
-        this.setState({ ...this.state, menu_open: false });
+    this.handleRegister = this.handleRegister.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.product !== this.props.product) {
+      const p = this.props.product;
+      this.setState({
+        product_name: p?.product_name || '',
+        product_id: p?.product_id || '',
+        ideal_cycle: p?.ideal_cycle || 0,
+      });
     }
-    handleRegister = async () => {
-        if (this.isBadForm()) return;
-        this.setState({ ...this.state,is_loading: true },async ()=>{
+  }
 
-            
-            const formData = new FormData();
-            Object.keys(this.state).forEach(key => {
-                if (this.state[key])
-                    formData.append(key, this.state[key]);
-            });
-           
-            try {
-                const { product } = this.props; // Get the product object from props
-                const method = product ? 'patch' : 'post';
-                const url = url_base + '/api/v2/products-read/' + (product ? `${product.uuid}/` : '');
-    
-                const response = await axios({
-                    method: method,
-                    url: url,
-                    data: formData,
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        'Authorization': "Token " + this.context.state.token
-                    }
-                });
-    
-                toast.success(`product ${product ? 'updated' : 'created'}`);
-                
-                    if(this.props.OnUpdate)
-                    this.props.OnUpdate();
-               
-            } catch (error) {
-                
-                toast.error("Something went wrong! Please try again. Hint: " + error?.response?.data['detail']);
-            } finally {
-                this.setState({ is_loading: false });
-                if(this.props.OnUpdate)
-                    this.props.OnUpdate();
-            }
-        });
-    };
-    isBadForm() {
-        const { product_name, ideal_cycle,product_id } = this.state;
-        if (!product_name    || !ideal_cycle  || !product_id ) {
-            toast.error("Please fill in all required fields");
-            return true;
-        }
-        return false;
+  handleChange(e) {
+    const { name, value } = e.target;
+    this.setState({ [name]: value });
+  }
+
+  isBadForm() {
+    const { product_name, product_id, ideal_cycle } = this.state;
+
+    if (!product_name || !product_id || !ideal_cycle) {
+      toast.error("Please fill in all required fields");
+      return true;
     }
-    render() {
-        const { product, assets } = this.props;
-    
-        
-        return (
-            <>
-                <Dialog
-                    fullScreen
-                    open={this.props.show}
-                    onClose={this.props.handleClose}
-                    TransitionComponent={Transition}
-                >
-                    <Backdrop
-                        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 10 }}
-                        open={this.state.is_loading}
-                    >
-                        <CircularProgress />
-                    </Backdrop>
-                    <AppBar sx={{ position: 'relative' }}>
-                        <Toolbar>
-                            <IconButton
-                                edge="start"
-                                color="inherit"
-                                onClick={this.props.handleClose}
-                                aria-label="close"
-                            >
-                                <CloseIcon />
-                            </IconButton>
-                            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-                                {product ? "Edit " : "Add "} Products
-                            </Typography>
-                            <Button autoFocus color="inherit" onClick={this.handleRegister}>
-                                {product ? "Edit " : "Create "}
-                            </Button>
-                        </Toolbar>
-                    </AppBar>
-                    <Grid container spacing={2} sx={{ p: 5 }}>
-                        <Accordion defaultExpanded sx={{width:"100%"}}>
-                            <AccordionSummary
-                                expandIcon={<ExpandMoreIcon />}
-                                aria-controls="panel1-content"
-                                id="panel1-header"
-                            >
-                                Basic Info
-                            </AccordionSummary>
-                            <AccordionDetails>
-                         
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="product_name"
-                                        placeholder='Name'
-                                        name='product_name'
-                                        type='text'
-                                        aria-describedby='product_name-text'
-                                        onChange={this.handleChange}
-                                        value={this.state.product_name}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="product_name-text">
-                                        <strong>Required *</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="name-text">
-                                        Enter a name for the product
-                                    </FormHelperText>
-                                </FormControl>
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="product_id"
-                                        placeholder='Unique ID'
-                                        name='product_id'
-                                        type='text'
-                                        aria-describedby='product_id-text'
-                                        onChange={this.handleChange}
-                                        value={this.state.product_id}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="product_id-text">
-                                        <strong>Required *</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="name-text">
-                                        Enter a unique id for the product
-                                    </FormHelperText>
-                                </FormControl>
-                                <FormControl variant="standard" fullWidth sx={{ m: 1 }}>
-                                    <Input
-                                        id="ideal_cycle"
-                                        placeholder='Name'
-                                        name='ideal_cycle'
-                                        type='number'
-                                        aria-describedby='ideal_cycle-text'
-                                        onChange={this.handleChange}
-                                        value={this.state.ideal_cycle}
-                                        autoComplete='off'
-                                    />
-                                    <FormHelperText id="ideal_cycle-text">
-                                        <strong>Required *</strong>
-                                    </FormHelperText>
-                                    <FormHelperText id="name-text">
-                                        Enter how long it takes to produce one unit in seconds
-                                    </FormHelperText>
-                                </FormControl>
+    return false;
+  }
 
-                               
+  async handleRegister() {
+    if (this.isBadForm()) return;
 
-                            
+    this.setState({ is_loading: true });
 
-                        
-                            </AccordionDetails>
-                        </Accordion>
+    try {
+      const { product } = this.props;
+      const method = product ? "patch" : "post";
+      const url =
+        url_base + "/api/v2/products-read/" + (product ? `${product.uuid}/` : "");
 
-                    </Grid>
+      const formData = new FormData();
+      formData.append("product_name", this.state.product_name);
+      formData.append("product_id", this.state.product_id);
+      formData.append("ideal_cycle", this.state.ideal_cycle);
 
-                </Dialog>
-            </>
-        );
+      await axios({
+        method,
+        url,
+        data: formData,
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: "Token " + this.context.state.token,
+        },
+      });
+
+      toast.success(`Product ${product ? "updated" : "created"}`);
+
+      if (this.props.OnUpdate) this.props.OnUpdate();
+    } catch (error) {
+      toast.error(
+        "Something went wrong! " +
+          (error?.response?.data?.detail || "")
+      );
+    } finally {
+      this.setState({ is_loading: false });
     }
+  }
+
+  render() {
+    const { product } = this.props;
+
+    return (
+      <Drawer
+        anchor="right"
+        open={this.props.show}
+        onClose={this.props.handleClose}
+        PaperProps={{
+          sx: {
+            width: "50vw",
+            minWidth: 420,
+            maxWidth: 720,
+            display: "flex",
+            flexDirection: "column",
+            bgcolor: "background.default",
+          },
+        }}
+        ModalProps={{ keepMounted: true }}
+      >
+        {/* Loading overlay */}
+        <Backdrop
+          sx={{ zIndex: theme => theme.zIndex.drawer + 3 }}
+          open={this.state.is_loading}
+        >
+          <CircularProgress />
+        </Backdrop>
+
+        {/* Header */}
+        <AppBar
+          elevation={0}
+          color="default"
+          sx={{
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            position: "sticky",
+            top: 0,
+            zIndex: 2,
+          }}
+        >
+          <Toolbar>
+            <IconButton edge="start" onClick={this.props.handleClose}>
+              <CloseIcon />
+            </IconButton>
+
+            <Typography sx={{ flex: 1 }} variant="h6">
+              {product ? "Edit Product" : "New Product"}
+            </Typography>
+
+            <Button variant="contained" onClick={this.handleRegister}>
+              {product ? "Save" : "Create"}
+            </Button>
+          </Toolbar>
+        </AppBar>
+
+        {/* Scrollable body */}
+        <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
+          <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
+            <Typography variant="h6" fontWeight={600}>
+              Basic Information
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+
+            <Grid container spacing={2}>
+              {/* Product Name */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Product Name"
+                  name="product_name"
+                  value={this.state.product_name}
+                  onChange={this.handleChange}
+                />
+              </Grid>
+
+              {/* Product ID */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Product ID"
+                  name="product_id"
+                  value={this.state.product_id}
+                  onChange={this.handleChange}
+                />
+              </Grid>
+
+              {/* Ideal Cycle */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Ideal Cycle (seconds)"
+                  type="number"
+                  name="ideal_cycle"
+                  value={this.state.ideal_cycle}
+                  onChange={this.handleChange}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+        </Box>
+      </Drawer>
+    );
+  }
 }
 
 ProductEditForm.contextType = AuthContext;
